@@ -25,17 +25,17 @@ export default cachedEventHandler(async (event) => {
   const dateFrom = String(query.dateFrom ?? today)
   const dateTo = String(query.dateTo ?? today)
 
+  const proxyUrl = 'https://matchresults-proxy.aleksy-anishchenko.workers.dev'
+
   const nextData = await $fetch<ScheduleResponse>(
-    `https://www.thesportsdb.com/api/v2/json/schedule/next/league/${leagueId}`,
-    { headers: { 'X-API-KEY': config.theSportsDbApiKey } }
+    `${proxyUrl}/schedule/next/league/${leagueId}`
   )
 
   const season = nextData.schedule[0]?.strSeason
   if (!season) return { matches: [] }
 
   const data = await $fetch<ScheduleResponse>(
-    `https://www.thesportsdb.com/api/v2/json/schedule/league/${leagueId}/${season}`,
-    { headers: { 'X-API-KEY': config.theSportsDbApiKey } }
+    `${proxyUrl}/schedule/league/${leagueId}/${season}`
   )
 
   const matches = data.schedule
