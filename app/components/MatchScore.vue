@@ -24,4 +24,12 @@ defineProps<{
   border-radius: 8px;
   flex-shrink: 0;
 }
+
+@media (max-width: 600px) {
+  .score {
+    width: 64px;
+    font-size: 13px;
+    padding: 4px 6px;
+  }
+}
 </style>

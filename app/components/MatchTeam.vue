@@ -38,6 +38,7 @@ defineProps<{
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .team--left {
@@ -50,5 +51,18 @@ defineProps<{
   justify-content: flex-start;
   text-align: left;
   padding-left: 12px;
+}
+
+.team__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .team__name {
+    font-size: 13px;
+  }
 }
 </style>

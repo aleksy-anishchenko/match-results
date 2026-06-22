@@ -4,16 +4,19 @@
 >
 import type {MatchesResponse} from '~/types'
 
-const today = new Date().toISOString().split('T')[0] ?? ''
-const nextWeek = new Date()
-nextWeek.setDate(nextWeek.getDate() + 6)
-const nextWeekStr = nextWeek.toISOString().split('T')[0] ?? ''
+const dateFrom = new Date()
+dateFrom.setDate(dateFrom.getDate() - 2)
+const dateFromStr = dateFrom.toISOString().split('T')[0] ?? ''
+
+const dateTo = new Date()
+dateTo.setDate(dateTo.getDate() + 6)
+const dateToStr = dateTo.toISOString().split('T')[0] ?? ''
 
 const {data, pending} = await useFetch<MatchesResponse>('/api/matches', {
   query: {
     leagueId: '4429',
-    dateFrom: today,
-    dateTo: nextWeekStr,
+    dateFrom: dateFromStr,
+    dateTo: dateToStr,
   }
 })
 

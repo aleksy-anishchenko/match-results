@@ -26,7 +26,8 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0;
+  padding-top: 16px;
+  padding-bottom: 16px;
   margin-bottom: 24px;
 }
 
@@ -50,5 +51,16 @@ header {
 .nav {
   display: flex;
   gap: 24px;
+}
+
+.nav a {
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .nav {
+    gap: 12px;
+    font-size: 14px;
+  }
 }
 </style>

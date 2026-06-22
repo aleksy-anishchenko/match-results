@@ -25,7 +25,7 @@ export default cachedEventHandler(async (event) => {
   const dateFrom = String(query.dateFrom ?? today)
   const dateTo = String(query.dateTo ?? today)
 
-  const proxyUrl = 'https://matchresults-proxy.aleksy-anishchenko.workers.dev'
+  const proxyUrl = config.proxyUrl
 
   const nextData = await $fetch<ScheduleResponse>(
     `${proxyUrl}/schedule/next/league/${leagueId}`

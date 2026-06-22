@@ -8,6 +8,7 @@ const props = defineProps<{ match: Match }>()
 
 const liveStatuses = new Set(['1H', 'HT', '2H', 'ET', 'PEN'])
 const isLive = computed(() => liveStatuses.has(props.match.strStatus))
+const isPast = computed(() => props.match.strStatus === 'FT' || props.match.strStatus === 'AET')
 
 const statusMap: Record<string, string> = {
   NS: 'Не начался',
@@ -34,7 +35,7 @@ const formatMoscowTime = (timestamp: string) =>
 <template>
   <div
       class="match"
-      :class="{ 'match--live': isLive }"
+      :class="{ 'match--live': isLive, 'match--past': isPast }"
   >
     <div class="match__meta">
       <template v-if="isLive">
@@ -44,7 +45,7 @@ const formatMoscowTime = (timestamp: string) =>
         </div>
       </template>
       <template v-else>
-        <div class="match__time">{{ formatMoscowTime(match.strTimestamp) }}</div>
+        <div class="match__time">{{ formatMoscowTime(match.strTimestamp) }} <span class="match__tz">МСК</span></div>
         <div class="match__status">{{ formatStatus(match.strStatus) }}</div>
       </template>
     </div>
@@ -82,7 +83,7 @@ const formatMoscowTime = (timestamp: string) =>
 }
 
 .match__meta {
-  width: 90px;
+  width: 75px;
   font-size: 14px;
   color: #333;
   flex-shrink: 0;
@@ -91,6 +92,30 @@ const formatMoscowTime = (timestamp: string) =>
 .match__status {
   font-size: 12px;
   color: #777;
+}
+
+.match__tz {
+  font-size: 11px;
+  color: #aaa;
+}
+
+@media (max-width: 600px) {
+  .match__meta {
+    width: 35px;
+    font-size: 12px;
+  }
+
+  .match__status {
+    display: none;
+  }
+
+  .match__tz {
+    display: none;
+  }
+}
+
+.match--past {
+  opacity: 0.65;
 }
 
 .match__live {
