@@ -52,7 +52,7 @@ export default cachedEventHandler(async (event) => {
 
   return { matches }
 }, {
-  maxAge: 60 * 5, // кэш 5 минут — матчи обновляются часто
+  maxAge: 60,
   getKey: (event) => {
     const q = getQuery(event)
     return `matches-${q.leagueId}-${q.dateFrom}-${q.dateTo}`

@@ -40,7 +40,7 @@ const formatMoscowTime = (timestamp: string) =>
     <div class="match__meta">
       <template v-if="isLive">
         <div class="match__live">
-          <span v-if="match.intProgress">{{ match.intProgress }}'</span>
+          <span v-if="match.intProgress != null">{{ match.intProgress }}'</span>
           <span v-else>{{ formatStatus(match.strStatus) }}</span>
         </div>
       </template>

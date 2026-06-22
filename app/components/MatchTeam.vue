@@ -2,19 +2,25 @@
     setup
     lang="ts"
 >
-defineProps<{
+const props = defineProps<{
   name: string
   badge: string
   side: 'left' | 'right'
 }>()
+
+const badgeUrl = computed(() =>
+  props.badge ? `/api/image?url=${encodeURIComponent(props.badge)}` : ''
+)
+
+const localName = computed(() => getTeamName(props.name))
 </script>
 
 <template>
   <div :class="['team', side === 'left' ? 'team--left' : 'team--right']">
     <template v-if="side === 'left'">
-      <div class="team__name">{{ name }}</div>
+      <div class="team__name">{{ localName }}</div>
       <img
-          :src="badge"
+          :src="badgeUrl"
           width="30"
           height="30"
           :alt="name"
@@ -22,12 +28,12 @@ defineProps<{
     </template>
     <template v-else>
       <img
-          :src="badge"
+          :src="badgeUrl"
           width="30"
           height="30"
           :alt="name"
       />
-      <div class="team__name">{{ name }}</div>
+      <div class="team__name">{{ localName }}</div>
     </template>
   </div>
 </template>
