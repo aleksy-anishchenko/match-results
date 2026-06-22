@@ -25,17 +25,20 @@ export default cachedEventHandler(async (event) => {
   const dateFrom = String(query.dateFrom ?? today)
   const dateTo = String(query.dateTo ?? today)
 
-  const proxyUrl = config.proxyUrl
+  const apiBase = 'https://www.thesportsdb.com/api/v2/json'
+  const headers = { 'X-API-KEY': config.theSportsDbApiKey }
 
   const nextData = await $fetch<ScheduleResponse>(
-    `${proxyUrl}/schedule/next/league/${leagueId}`
+    `${apiBase}/schedule/next/league/${leagueId}`,
+    { headers }
   )
 
   const season = nextData.schedule[0]?.strSeason
   if (!season) return { matches: [] }
 
   const data = await $fetch<ScheduleResponse>(
-    `${proxyUrl}/schedule/league/${leagueId}/${season}`
+    `${apiBase}/schedule/league/${leagueId}/${season}`,
+    { headers }
   )
 
   const matches = data.schedule

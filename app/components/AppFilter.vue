@@ -1,0 +1,69 @@
+<script setup lang="ts">
+type Mode = 'yesterday' | 'today' | 'tomorrow'
+
+const emit = defineEmits<{
+  change: [{ from: string; to: string }]
+}>()
+
+const activeMode = ref<Mode>('today')
+
+const offsets: Record<Mode, number> = {
+  yesterday: -1,
+  today: 0,
+  tomorrow: 1,
+}
+
+function getMoscowDateStr(offset: number): string {
+  const d = new Date()
+  d.setTime(d.getTime() + offset * 24 * 60 * 60 * 1000)
+  return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
+}
+
+function selectDay(mode: Mode) {
+  const dateStr = getMoscowDateStr(offsets[mode])
+  activeMode.value = mode
+  emit('change', { from: dateStr, to: dateStr })
+}
+</script>
+
+<template>
+  <div class="filter">
+    <Button
+        class="filter__button"
+        label="Сегодня"
+        :severity="activeMode === 'today' ? 'contrast' : 'secondary'"
+        @click="selectDay('today')"
+    />
+    <Button
+        class="filter__button"
+        label="Завтра"
+        :severity="activeMode === 'tomorrow' ? 'contrast' : 'secondary'"
+        @click="selectDay('tomorrow')"
+    />
+    <Button
+        class="filter__button"
+        label="Вчера"
+        :severity="activeMode === 'yesterday' ? 'contrast' : 'secondary'"
+        @click="selectDay('yesterday')"
+    />
+  </div>
+</template>
+
+<style scoped>
+.filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.filter__button {
+  min-width: 80px;
+}
+
+@media (max-width: 600px) {
+  .filter__button {
+    min-width: 0;
+    flex: 1;
+  }
+}
+</style>

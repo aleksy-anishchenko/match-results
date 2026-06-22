@@ -23,8 +23,6 @@ jobs:
 
       - name: Build
         run: npm run build
-        env:
-          NUXT_THE_SPORTS_DB_API_KEY: ${{ secrets.NUXT_THE_SPORTS_DB_API_KEY }}
 
       - name: Setup SSH key
         run: |
@@ -36,16 +34,11 @@ jobs:
       - name: Deploy files
         run: |
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p 22" \
+            -e "ssh -i ~/.ssh/deploy_key" \
             .output/ \
-            9619862181@9619862181.myjino.ru:domains/matchresults.ru/.output/
-
-          rsync -avz \
-            -e "ssh -i ~/.ssh/deploy_key -p 22" \
-            app.js \
-            9619862181@9619862181.myjino.ru:domains/matchresults.ru/app.js
+            root@62.132.3.59:/var/www/matchresults/.output/
 
       - name: Restart app
         run: |
-          ssh -i ~/.ssh/deploy_key -p 22 9619862181@9619862181.myjino.ru \
-            "mkdir -p ~/domains/matchresults.ru/tmp && touch ~/domains/matchresults.ru/tmp/restart.txt"
+          ssh -i ~/.ssh/deploy_key root@62.132.3.59 \
+            "cd /var/www/matchresults && pm2 restart matchresults || pm2 start .output/server/index.mjs --name matchresults"

@@ -1,23 +1,15 @@
-<script
-    setup
-    lang="ts"
->
+<script setup lang="ts">
 import type {MatchesResponse} from '~/types'
 
-const dateFrom = new Date()
-dateFrom.setDate(dateFrom.getDate() - 2)
-const dateFromStr = dateFrom.toISOString().split('T')[0] ?? ''
+const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
+const dateRange = ref({ from: today, to: today })
 
-const dateTo = new Date()
-dateTo.setDate(dateTo.getDate() + 6)
-const dateToStr = dateTo.toISOString().split('T')[0] ?? ''
-
-const {data, pending} = await useFetch<MatchesResponse>('/api/matches', {
-  query: {
+const { data, pending } = await useFetch<MatchesResponse>('/api/matches', {
+  query: computed(() => ({
     leagueId: '4429',
-    dateFrom: dateFromStr,
-    dateTo: dateToStr,
-  }
+    dateFrom: dateRange.value.from,
+    dateTo: dateRange.value.to,
+  }))
 })
 
 const groupedMatches = computed(() =>
@@ -28,8 +20,9 @@ const groupedMatches = computed(() =>
 <template>
   <div>
     <h1 class="page-title">Чемпионат мира (FIFA)</h1>
+    <AppFilter @change="dateRange = $event" />
     <p v-if="pending">Загрузка...</p>
-    <p v-else-if="!Object.keys(groupedMatches).length">Матчей в ближайшую неделю нет</p>
+    <p v-else-if="!Object.keys(groupedMatches).length">Матчей нет</p>
     <MatchList
         v-else
         :matches="groupedMatches"
@@ -41,6 +34,6 @@ const groupedMatches = computed(() =>
 .page-title {
   font-size: 26px;
   font-weight: bold;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 </style>

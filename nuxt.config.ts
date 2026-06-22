@@ -2,7 +2,7 @@ import Aura from '@primeuix/themes/aura'
 
 export default defineNuxtConfig({
   runtimeConfig: {
-    proxyUrl: 'https://matchresults-proxy.aleksy-anishchenko.workers.dev'
+    theSportsDbApiKey: ''
   },
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -15,5 +15,5 @@ modules: ['@pinia/nuxt', '@primevue/nuxt-module'],
       }
     }
   },
-  css: ['~/assets/css/fonts.css', '~/assets/css/global.css']
+  css: ['~/assets/css/fonts.css', '~/assets/css/global.css', 'primeicons/primeicons.css']
 })
