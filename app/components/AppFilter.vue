@@ -14,9 +14,8 @@ const offsets: Record<Mode, number> = {
 }
 
 function getMoscowDateStr(offset: number): string {
-  const d = new Date()
-  d.setTime(d.getTime() + offset * 24 * 60 * 60 * 1000)
-  return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
+  const date = new Date(Date.now() + offset * 24 * 60 * 60 * 1000)
+  return date.toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
 }
 
 function selectDay(mode: Mode) {

@@ -41,8 +41,14 @@ export default cachedEventHandler(async (event) => {
     { headers }
   )
 
+  const getMoscowDate = (timestamp: string) =>
+    new Date(timestamp + 'Z').toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
+
   const matches = data.schedule
-    .filter(m => m.dateEvent >= dateFrom && m.dateEvent <= dateTo)
+    .filter(m => {
+      const moscowDate = getMoscowDate(m.strTimestamp)
+      return moscowDate >= dateFrom && moscowDate <= dateTo
+    })
     .sort((a, b) => a.strTimestamp.localeCompare(b.strTimestamp))
     .map(({ idEvent, strHomeTeam, strAwayTeam, strHomeTeamBadge, strAwayTeamBadge,
             intHomeScore, intAwayScore, strStatus, strTimestamp, dateEvent, strGroup }) => ({

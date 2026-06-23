@@ -1,8 +1,5 @@
-<script
-    setup
-    lang="ts"
->
-import type {Match} from '~/types'
+<script setup lang="ts">
+import type { Match } from '~/types'
 
 defineProps<{ matches: Record<string, Match[]> }>()
 </script>

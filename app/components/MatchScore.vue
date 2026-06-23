@@ -1,7 +1,4 @@
-<script
-    setup
-    lang="ts"
->
+<script setup lang="ts">
 defineProps<{
   homeScore: string | null
   awayScore: string | null

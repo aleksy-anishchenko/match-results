@@ -1,7 +1,4 @@
-<script
-    setup
-    lang="ts"
->
+<script setup lang="ts">
 const props = defineProps<{
   name: string
   badge: string
@@ -16,25 +13,14 @@ const localName = computed(() => getTeamName(props.name))
 </script>
 
 <template>
-  <div :class="['team', side === 'left' ? 'team--left' : 'team--right']">
-    <template v-if="side === 'left'">
-      <div class="team__name">{{ localName }}</div>
-      <img
-          :src="badgeUrl"
-          width="30"
-          height="30"
-          :alt="name"
-      />
-    </template>
-    <template v-else>
-      <img
-          :src="badgeUrl"
-          width="30"
-          height="30"
-          :alt="name"
-      />
-      <div class="team__name">{{ localName }}</div>
-    </template>
+  <div :class="['team', `team--${side}`]">
+    <img
+        :src="badgeUrl"
+        width="30"
+        height="30"
+        :alt="name"
+    />
+    <div class="team__name">{{ localName }}</div>
   </div>
 </template>
 
@@ -48,7 +34,8 @@ const localName = computed(() => getTeamName(props.name))
 }
 
 .team--left {
-  justify-content: flex-end;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
   text-align: right;
   padding-right: 12px;
 }

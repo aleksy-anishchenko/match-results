@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "esModuleInterop": true,
+    "types": ["vitest/globals"],
+    "paths": {
+      "~": ["./app"],
+      "~/*": ["./app/*"]
+    }
+  },
+  "include": [
+    "vitest.config.ts",
+    "tests/**/*.ts",
+    "app/**/*.ts",
+    "app/**/*.vue"
+  ]
+}

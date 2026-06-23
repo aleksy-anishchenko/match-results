@@ -1,6 +1,6 @@
 <script setup lang="ts">
 useHead({
-  titleTemplate: '%s | MatchResults',
+  titleTemplate: '%s',
   title: 'Результаты матчей',
   link: [
     { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
