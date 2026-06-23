@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { getTeamName } from '~/utils/teamNames'
+import {describe, it, expect} from 'vitest'
+import {getTeamName} from '~/utils/teamNames'
 
 describe('getTeamName', () => {
   it('переводит известную команду на русский', () => {

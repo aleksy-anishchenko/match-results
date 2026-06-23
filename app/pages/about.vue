@@ -22,7 +22,7 @@ useHead({ title: 'О проекте' })
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .about__title {
   font-size: 26px;
   font-weight: bold;
@@ -39,7 +39,7 @@ useHead({ title: 'О проекте' })
 .about__dedication {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 16px;
   text-align: center;
 }
@@ -57,9 +57,9 @@ useHead({ title: 'О проекте' })
   font-style: italic;
 }
 
-@media (max-width: 600px) {
+@media (min-width: $breakpoint-desktop) {
   .about__dedication {
-    align-items: center;
+    align-items: flex-end;
   }
 }
 </style>

@@ -47,7 +47,7 @@ const leagueBadgeUrl = computed(() => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .page-header {
   display: flex;
   align-items: center;
@@ -56,14 +56,25 @@ const leagueBadgeUrl = computed(() => {
 }
 
 .page-header__logo {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .page-header__title {
-  font-size: 26px;
+  font-size: 16px;
   font-weight: bold;
+}
+
+@media (min-width: $breakpoint-desktop) {
+  .page-header__logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .page-header__title {
+    font-size: 26px;
+  }
 }
 </style>

@@ -19,7 +19,7 @@ ol {
 }
 
 .container {
-  max-width: 800px;
+  max-width: $container-max;
   margin: 0 auto;
   padding: 0 16px;
 }

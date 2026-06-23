@@ -27,7 +27,7 @@ const groups = computed(() => data.value?.groups ?? {})
               <th title="Победы">В</th>
               <th title="Ничьи">Н</th>
               <th title="Поражения">П</th>
-              <th title="Голы забитые : пропущенные">Г</th>
+              <th class="table__goals-col" title="Голы забитые : пропущенные">Г</th>
               <th title="Разность голов">РГ</th>
               <th title="Очки">О</th>
             </tr>
@@ -69,7 +69,7 @@ const groups = computed(() => data.value?.groups ?? {})
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .page-title {
   font-size: 26px;
   font-weight: bold;
@@ -78,7 +78,7 @@ const groups = computed(() => data.value?.groups ?? {})
 
 .groups {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: 1fr;
   gap: 32px;
   padding-bottom: 48px;
 }
@@ -94,16 +94,21 @@ const groups = computed(() => data.value?.groups ?? {})
 
 .table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .table thead th {
   text-align: center;
-  padding: 4px 6px;
+  padding: 4px 4px;
   color: #999;
   font-weight: 500;
   border-bottom: 1px solid #eee;
+}
+
+.table thead th:not(.table__team-col) {
+  width: 26px;
 }
 
 .table__team-col {
@@ -111,7 +116,7 @@ const groups = computed(() => data.value?.groups ?? {})
 }
 
 .table tbody td {
-  padding: 6px 6px;
+  padding: 6px 4px;
   text-align: center;
   border-bottom: 1px solid #f3f3f3;
 }
@@ -127,9 +132,9 @@ const groups = computed(() => data.value?.groups ?? {})
 .table__team {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   text-align: left !important;
-  white-space: nowrap;
+  overflow: hidden;
 }
 
 .table__position {
@@ -147,6 +152,13 @@ const groups = computed(() => data.value?.groups ?? {})
 .table__name {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.table__goals-col,
+.table__goals {
+  display: none;
 }
 
 .table__goals {
@@ -165,9 +177,31 @@ const groups = computed(() => data.value?.groups ?? {})
   color: #dc2626;
 }
 
-@media (max-width: 600px) {
+@media (min-width: $breakpoint-desktop) {
   .groups {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  }
+
+  .table {
+    font-size: 14px;
+  }
+
+  .table thead th:not(.table__team-col) {
+    width: 36px;
+    padding: 4px 6px;
+  }
+
+  .table tbody td {
+    padding: 6px;
+  }
+
+  .table__team {
+    gap: 8px;
+  }
+
+  .table__goals-col,
+  .table__goals {
+    display: table-cell;
   }
 }
 </style>

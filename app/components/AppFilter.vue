@@ -48,7 +48,7 @@ function selectDay(mode: Mode) {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .filter {
   display: flex;
   gap: 8px;
@@ -56,13 +56,14 @@ function selectDay(mode: Mode) {
 }
 
 .filter__button {
-  min-width: 80px;
+  min-width: 0;
+  flex: 1;
 }
 
-@media (max-width: 600px) {
+@media (min-width: $breakpoint-desktop) {
   .filter__button {
-    min-width: 0;
-    flex: 1;
+    min-width: 80px;
+    flex: initial;
   }
 }
 </style>

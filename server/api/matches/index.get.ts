@@ -26,23 +26,23 @@ export default cachedEventHandler(async (event) => {
   const dateTo = String(query.dateTo ?? today)
 
   const apiBase = 'https://www.thesportsdb.com/api/v2/json'
-  const headers = { 'X-API-KEY': config.theSportsDbApiKey }
+  const headers = {'X-API-KEY': config.theSportsDbApiKey}
 
   const nextData = await $fetch<ScheduleResponse>(
     `${apiBase}/schedule/next/league/${leagueId}`,
-    { headers }
+    {headers}
   )
 
   const season = nextData.schedule[0]?.strSeason
-  if (!season) return { matches: [] }
+  if (!season) return {matches: []}
 
   const data = await $fetch<ScheduleResponse>(
     `${apiBase}/schedule/league/${leagueId}/${season}`,
-    { headers }
+    {headers}
   )
 
   const getMoscowDate = (timestamp: string) =>
-    new Date(timestamp + 'Z').toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
+    new Date(timestamp + 'Z').toLocaleDateString('sv-SE', {timeZone: 'Europe/Moscow'})
 
   const matches = data.schedule
     .filter(m => {
@@ -50,13 +50,24 @@ export default cachedEventHandler(async (event) => {
       return moscowDate >= dateFrom && moscowDate <= dateTo
     })
     .sort((a, b) => a.strTimestamp.localeCompare(b.strTimestamp))
-    .map(({ idEvent, strHomeTeam, strAwayTeam, strHomeTeamBadge, strAwayTeamBadge,
-            intHomeScore, intAwayScore, strStatus, strTimestamp, dateEvent, strGroup }) => ({
+    .map(({
+            idEvent,
+            strHomeTeam,
+            strAwayTeam,
+            strHomeTeamBadge,
+            strAwayTeamBadge,
+            intHomeScore,
+            intAwayScore,
+            strStatus,
+            strTimestamp,
+            dateEvent,
+            strGroup
+          }) => ({
       idEvent, strHomeTeam, strAwayTeam, strHomeTeamBadge, strAwayTeamBadge,
       intHomeScore, intAwayScore, strStatus, strTimestamp, dateEvent, strGroup
     }))
 
-  return { matches }
+  return {matches}
 }, {
   maxAge: 60,
   getKey: (event) => {

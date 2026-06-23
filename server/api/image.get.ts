@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
   const url = String(query.url ?? '')
 
   if (!url.startsWith('https://www.thesportsdb.com/') && !url.startsWith('https://r2.thesportsdb.com/')) {
-    throw createError({ statusCode: 400, message: 'Invalid image URL' })
+    throw createError({statusCode: 400, message: 'Invalid image URL'})
   }
 
   const response = await fetch(url)

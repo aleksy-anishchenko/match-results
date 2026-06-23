@@ -63,7 +63,7 @@ const formatMoscowTime = (timestamp: string) =>
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .match {
   display: flex;
   align-items: center;
@@ -80,38 +80,40 @@ const formatMoscowTime = (timestamp: string) =>
 }
 
 .match__meta {
-  width: 75px;
-  font-size: 14px;
+  width: 35px;
+  font-size: 12px;
   color: #333;
   flex-shrink: 0;
 }
 
 .match__status {
+  display: none;
   font-size: 12px;
   color: #777;
 }
 
 .match__tz {
+  display: none;
   font-size: 11px;
   color: #aaa;
 }
 
-@media (max-width: 600px) {
+@media (min-width: $breakpoint-desktop) {
   .match__meta {
-    width: 35px;
-    font-size: 12px;
+    width: 75px;
+    font-size: 14px;
   }
 
   .match__status {
-    display: none;
+    display: block;
   }
 
   .match__tz {
-    display: none;
+    display: inline;
   }
 
   .match__live {
-    font-size: 12px;
+    font-size: 14px;
   }
 }
 
@@ -123,7 +125,7 @@ const formatMoscowTime = (timestamp: string) =>
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: #f87171;
 }

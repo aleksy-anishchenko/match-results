@@ -11,22 +11,23 @@ defineProps<{
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .score {
-  width: 80px;
+  width: 62px;
   text-align: center;
-  padding: 4px 8px;
+  padding: 4px 6px;
+  font-size: 13px;
   font-weight: bold;
   background: #f0f0f0;
   border-radius: 8px;
   flex-shrink: 0;
 }
 
-@media (max-width: 600px) {
+@media (min-width: $breakpoint-desktop) {
   .score {
-    width: 64px;
-    font-size: 13px;
-    padding: 4px 6px;
+    width: 80px;
+    font-size: inherit;
+    padding: 4px 8px;
   }
 }
 </style>

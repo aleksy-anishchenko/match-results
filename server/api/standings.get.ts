@@ -1,4 +1,4 @@
-import type { GroupStanding } from '~/types'
+import type {GroupStanding} from '~/types'
 
 type ApiMatch = {
   strHomeTeam: string
@@ -22,11 +22,11 @@ function inferGroups(matches: ApiMatch[]): string[][] {
   const playedWith: Record<string, Set<string>> = {}
 
   for (const match of matches) {
-    const { strHomeTeam: home, strAwayTeam: away } = match
+    const {strHomeTeam: home, strAwayTeam: away} = match
     if (!playedWith[home]) playedWith[home] = new Set()
     if (!playedWith[away]) playedWith[away] = new Set()
-    playedWith[home].add(away)
-    playedWith[away].add(home)
+    playedWith[home]!.add(away)
+    playedWith[away]!.add(home)
   }
 
   const visited = new Set<string>()
@@ -34,12 +34,12 @@ function inferGroups(matches: ApiMatch[]): string[][] {
 
   for (const team of Object.keys(playedWith).sort()) {
     if (visited.has(team)) continue
-    const group = [team, ...playedWith[team]].sort()
+    const group = [team, ...(playedWith[team] ?? [])].sort()
     groups.push(group)
     group.forEach(t => visited.add(t))
   }
 
-  return groups.sort((a, b) => a[0].localeCompare(b[0]))
+  return groups.sort((a, b) => (a[0] ?? '').localeCompare(b[0] ?? ''))
 }
 
 function calculateStandings(
@@ -59,7 +59,12 @@ function calculateStandings(
   }
 
   for (const match of finishedMatches) {
-    const { strHomeTeam: home, strAwayTeam: away, intHomeScore, intAwayScore } = match
+    const {
+      strHomeTeam: home,
+      strAwayTeam: away,
+      intHomeScore,
+      intAwayScore
+    } = match
     if (!stats[home] || !stats[away]) continue
 
     const homeGoals = parseInt(intHomeScore ?? '0')
@@ -74,19 +79,23 @@ function calculateStandings(
     stats[away].goalsAgainst += homeGoals
 
     if (homeGoals > awayGoals) {
-      stats[home].won++; stats[home].points += 3
+      stats[home].won++;
+      stats[home].points += 3
       stats[away].lost++
     } else if (homeGoals === awayGoals) {
-      stats[home].drawn++; stats[home].points++
-      stats[away].drawn++; stats[away].points++
+      stats[home].drawn++;
+      stats[home].points++
+      stats[away].drawn++;
+      stats[away].points++
     } else {
-      stats[away].won++; stats[away].points += 3
+      stats[away].won++;
+      stats[away].points += 3
       stats[home].lost++
     }
   }
 
   return Object.values(stats)
-    .map(s => ({ ...s, goalDiff: s.goalsFor - s.goalsAgainst }))
+    .map(s => ({...s, goalDiff: s.goalsFor - s.goalsAgainst}))
     .sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points
       if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff
@@ -96,20 +105,20 @@ function calculateStandings(
 
 export default cachedEventHandler(async () => {
   const config = useRuntimeConfig()
-  const headers = { 'X-API-KEY': config.theSportsDbApiKey }
+  const headers = {'X-API-KEY': config.theSportsDbApiKey}
   const apiBase = 'https://www.thesportsdb.com/api/v2/json'
 
   const nextData = await $fetch<ScheduleResponse>(
     `${apiBase}/schedule/next/league/4429`,
-    { headers },
+    {headers},
   )
 
   const season = nextData.schedule[0]?.strSeason
-  if (!season) return { groups: {} }
+  if (!season) return {groups: {}}
 
   const data = await $fetch<ScheduleResponse>(
     `${apiBase}/schedule/league/4429/${season}`,
-    { headers },
+    {headers},
   )
 
   const groupMatches = data.schedule.filter(m => GROUP_ROUNDS.includes(m.intRound))
@@ -129,7 +138,7 @@ export default cachedEventHandler(async () => {
     result[letter] = calculateStandings(groupTeams, badgeMap, finishedMatches)
   })
 
-  return { groups: result }
+  return {groups: result}
 }, {
   maxAge: 60,
   getKey: () => 'standings-4429',

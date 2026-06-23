@@ -31,7 +31,7 @@ watch(route, () => { isOpen.value = false })
   </header>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .header {
   position: relative;
   display: flex;
@@ -39,7 +39,7 @@ watch(route, () => { isOpen.value = false })
   justify-content: space-between;
   padding-top: 16px;
   padding-bottom: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .logo {
@@ -59,7 +59,7 @@ watch(route, () => { isOpen.value = false })
 }
 
 .nav {
-  display: flex;
+  display: none;
   gap: 24px;
 }
 
@@ -68,7 +68,7 @@ watch(route, () => { isOpen.value = false })
 }
 
 .burger {
-  display: none;
+  display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 5px;
@@ -113,18 +113,18 @@ watch(route, () => { isOpen.value = false })
 
 .mobile-nav a {
   display: block;
-  padding: 14px 16px;
+  padding: 14px 24px;
   font-size: 16px;
   color: inherit;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .mobile-nav a:last-child {
   border-bottom: none;
 }
 
-@media (max-width: 560px) {
-  .nav { display: none; }
-  .burger { display: flex; }
+@media (min-width: $breakpoint-desktop) {
+  .nav { display: flex; }
+  .burger { display: none; }
 }
 </style>
