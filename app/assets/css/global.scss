@@ -22,4 +22,8 @@ ol {
   max-width: $container-max;
   margin: 0 auto;
   padding: 0 16px;
+
+  @media (min-width: $breakpoint-desktop) {
+    padding: 0 24px;
+  }
 }

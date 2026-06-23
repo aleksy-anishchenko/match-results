@@ -26,7 +26,7 @@ function selectDay(mode: Mode) {
 </script>
 
 <template>
-  <div class="filter">
+  <div class="filter" role="group" aria-label="Выбор дня">
     <Button
         class="filter__button"
         label="Сегодня"
@@ -52,7 +52,7 @@ function selectDay(mode: Mode) {
 .filter {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .filter__button {

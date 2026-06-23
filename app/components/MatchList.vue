@@ -5,22 +5,20 @@ defineProps<{ matches: Record<string, Match[]> }>()
 </script>
 
 <template>
-  <div class="match-list">
-    <div
+  <ul class="match-list">
+    <li
         v-for="(dayMatches, date) in matches"
         :key="date"
         class="match-group"
     >
       <h2 class="match-date">{{ formatReadableDate(String(date)) }}</h2>
-      <div class="match-items">
-        <MatchItem
-            v-for="match in dayMatches"
-            :key="match.idEvent"
-            :match="match"
-        />
-      </div>
-    </div>
-  </div>
+      <ul class="match-items">
+        <li v-for="match in dayMatches" :key="match.idEvent">
+          <MatchItem :match="match" />
+        </li>
+      </ul>
+    </li>
+  </ul>
 </template>
 
 <style scoped>
@@ -28,6 +26,7 @@ defineProps<{ matches: Record<string, Match[]> }>()
   display: flex;
   flex-direction: column;
   gap: 20px;
+  max-width: 800px;
 }
 
 .match-date {

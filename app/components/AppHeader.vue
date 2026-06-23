@@ -8,11 +8,12 @@ watch(route, () => { isOpen.value = false })
 <template>
   <header class="header container">
     <NuxtLink to="/" class="logo">
+      <span class="logo__dot" />
       <span class="logo__text">MatchResults</span>
     </NuxtLink>
 
     <ul class="nav">
-      <li><NuxtLink to="/">Результаты матчей</NuxtLink></li>
+      <li><NuxtLink to="/">Результаты</NuxtLink></li>
       <li><NuxtLink to="/standings">Таблица</NuxtLink></li>
       <li><NuxtLink to="/about">О проекте</NuxtLink></li>
     </ul>
@@ -23,7 +24,7 @@ watch(route, () => { isOpen.value = false })
 
     <div v-if="isOpen" class="mobile-nav">
       <ul>
-        <li><NuxtLink to="/">Результаты матчей</NuxtLink></li>
+        <li><NuxtLink to="/">Результаты</NuxtLink></li>
         <li><NuxtLink to="/standings">Таблица</NuxtLink></li>
         <li><NuxtLink to="/about">О проекте</NuxtLink></li>
       </ul>
@@ -37,8 +38,8 @@ watch(route, () => { isOpen.value = false })
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 16px;
-  padding-bottom: 16px;
+  padding-top: 20px;
+  padding-bottom: 20px;
   margin-bottom: 16px;
 }
 
@@ -49,13 +50,19 @@ watch(route, () => { isOpen.value = false })
   color: inherit;
 }
 
-.logo__text {
+.logo__dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
   background-color: #4ade80;
-  color: white;
+  flex-shrink: 0;
+}
+
+.logo__text {
   font-size: 16px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 8px;
+  font-weight: 700;
+  color: #111827;
 }
 
 .nav {

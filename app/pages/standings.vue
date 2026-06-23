@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { StandingsResponse } from '~/types'
 
-useHead({ title: 'Таблица' })
+useHead({ title: 'Турнирная таблица' })
 
 const { data } = await useFetch<StandingsResponse>('/api/standings')
 
@@ -9,10 +9,9 @@ const groups = computed(() => data.value?.groups ?? {})
 </script>
 
 <template>
-  <div>
-    <h1 class="page-title">Групповой этап</h1>
+  <h1 class="page-title">Групповой этап</h1>
 
-    <div class="groups">
+  <div class="groups">
       <div
           v-for="(standings, letter) in groups"
           :key="letter"
@@ -65,7 +64,6 @@ const groups = computed(() => data.value?.groups ?? {})
           </tbody>
         </table>
       </div>
-    </div>
   </div>
 </template>
 

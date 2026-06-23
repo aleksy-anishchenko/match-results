@@ -27,24 +27,22 @@ const leagueBadgeUrl = computed(() => {
 </script>
 
 <template>
-  <div>
-    <div class="page-header">
-      <img
-          v-if="leagueBadgeUrl"
-          :src="leagueBadgeUrl"
-          alt="FIFA World Cup 2026"
-          class="page-header__logo"
-      />
-      <h1 class="page-header__title">Чемпионат мира по футболу FIFA 2026</h1>
-    </div>
-    <AppFilter @change="dateRange = $event" />
-    <p v-if="pending">Загрузка...</p>
-    <p v-else-if="!Object.keys(groupedMatches).length">Матчей нет</p>
-    <MatchList
-        v-else
-        :matches="groupedMatches"
+  <div class="page-header">
+    <img
+        v-if="leagueBadgeUrl"
+        :src="leagueBadgeUrl"
+        alt="FIFA World Cup 2026"
+        class="page-header__logo"
     />
+    <h1 class="page-header__title">Чемпионат мира по футболу FIFA 2026</h1>
   </div>
+  <AppFilter @change="dateRange = $event" />
+  <p v-if="pending">Загрузка...</p>
+  <p v-else-if="!Object.keys(groupedMatches).length">Матчей нет</p>
+  <MatchList
+      v-else
+      :matches="groupedMatches"
+  />
 </template>
 
 <style scoped lang="scss">
