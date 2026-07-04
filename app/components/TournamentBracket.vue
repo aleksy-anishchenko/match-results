@@ -102,10 +102,9 @@ const liveMap: Record<string, string> = {
               :alt="match.homeTeam"
             />
             <span class="mc-name">{{ getTeamName(match.homeTeam) || 'Не определен' }}</span>
-            <span v-if="match.homeScore !== null" class="mc-score">
+            <span v-if="DONE.has(match.status) && match.homeScore !== null" class="mc-score">
               {{ match.homeScore }}<sup v-if="match.homePenScore != null" class="mc-pen">{{ match.homePenScore }}</sup>
             </span>
-            <span v-if="liveMap[match.status] && !result(match)" class="mc-live">{{ liveMap[match.status] }}</span>
           </div>
 
           <div class="mc-sep" />
@@ -126,7 +125,7 @@ const liveMap: Record<string, string> = {
               :alt="match.awayTeam"
             />
             <span class="mc-name">{{ getTeamName(match.awayTeam) || 'Не определен' }}</span>
-            <span v-if="match.awayScore !== null" class="mc-score">
+            <span v-if="DONE.has(match.status) && match.awayScore !== null" class="mc-score">
               {{ match.awayScore }}<sup v-if="match.awayPenScore != null" class="mc-pen">{{ match.awayPenScore }}</sup>
             </span>
           </div>

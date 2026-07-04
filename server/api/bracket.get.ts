@@ -30,10 +30,44 @@ const FINISHED = new Set(['FT', 'AET', 'AP'])
 
 // FIFA 2026 official bracket display order for Round of 32 (intRound = '32')
 // Maps from timestamp-sorted index to bracket seeding position so that
-// sequential pairing produces correct Round of 16 matchups:
-//   [0,1] → R16#1, [2,3] → R16#2, [4,5] → R16#3, [6,7] → R16#4
-//   [8,9] → R16#5, [10,11] → R16#6, [12,13] → R16#7, [14,15] → R16#8
+// sequential pairing produces correct Round of 16 matchups.
 const FIFA2026_R32_ORDER = [0, 3, 2, 5, 8, 9, 10, 11, 1, 4, 6, 7, 12, 15, 13, 14]
+
+// For rounds after R32: sort matches by bracket position derived from prev round.
+// Also detects when home/away are reversed vs bracket seeding and flags for swap.
+// Even-indexed prev match winner → home (top); odd-indexed → away (bottom).
+function sortByBracketPosition(
+  matches: ApiMatch[],
+  prevMatches: BracketMatch[],
+): Array<{ match: ApiMatch; swapped: boolean }> {
+  const slotCount = Math.floor(prevMatches.length / 2)
+  const result: ({ match: ApiMatch; swapped: boolean } | null)[] = new Array(slotCount).fill(null)
+  const placedIds = new Set<string>()
+
+  for (const match of matches) {
+    for (let i = 0; i < prevMatches.length; i++) {
+      const prev = prevMatches[i]!
+      const prevTeams = [prev.homeTeam, prev.awayTeam]
+      const homeInPrev = prevTeams.includes(match.strHomeTeam)
+      const awayInPrev = prevTeams.includes(match.strAwayTeam)
+      if (!homeInPrev && !awayInPrev) continue
+
+      const slot = Math.floor(i / 2)
+      if (!result[slot]) {
+        // Even prev index → winner should be home (top in bracket)
+        const isEven = i % 2 === 0
+        const swapped = homeInPrev ? !isEven : isEven
+        result[slot] = { match, swapped }
+        placedIds.add(match.idEvent)
+      }
+      break
+    }
+  }
+
+  const remaining = matches.filter(m => !placedIds.has(m.idEvent))
+  let ri = 0
+  return result.map(r => r ?? { match: remaining[ri++] ?? matches[0]!, swapped: false })
+}
 
 function getRoundName(count: number, isLast: boolean, isSecondToLast: boolean): string {
   if (count === 1 && isLast) return 'Финал'
@@ -51,7 +85,6 @@ function matchWinner(m: BracketMatch): { team: string; badge: string } | null {
   const a = Number(m.awayScore ?? 0)
   if (h > a) return { team: m.homeTeam, badge: m.homeBadge }
   if (a > h) return { team: m.awayTeam, badge: m.awayBadge }
-  // AP: use penalty scores to determine winner
   if (m.status === 'AP') {
     const hp = m.homePenScore ?? 0
     const ap = m.awayPenScore ?? 0
@@ -91,7 +124,6 @@ function buildProjectedRounds(seed: BracketRound): BracketRound[] {
     if (next.length === 1) break
   }
 
-  // assign names now that we know the full projected structure
   const total = result.length
   result.forEach((r, idx) => {
     r.name = getRoundName(r.matches.length, idx === total - 1, idx === total - 2)
@@ -147,37 +179,51 @@ export default cachedEventHandler(async () => {
   const sortedKeys = Object.keys(byRound).sort((a, b) => Number(b) - Number(a))
   const total = sortedKeys.length
 
-  const rounds: BracketRound[] = sortedKeys.map((round, index) => ({
-    round,
-    name: getRoundName(
-      byRound[round]!.length,
-      index === total - 1,
-      index === total - 2,
-    ),
-    projected: false,
-    matches: (() => {
-      const sorted = byRound[round]!
-        .sort((a, b) => a.strTimestamp.localeCompare(b.strTimestamp))
-      const ordered = round === '32' && sorted.length === 16
-        ? FIFA2026_R32_ORDER.map(i => sorted[i]!)
-        : sorted
-      return ordered
-    })().map(m => ({
+  const rounds: BracketRound[] = []
+
+  for (let index = 0; index < sortedKeys.length; index++) {
+    const round = sortedKeys[index]!
+    const sorted = byRound[round]!.sort((a, b) => a.strTimestamp.localeCompare(b.strTimestamp))
+
+    type Ordered = { match: ApiMatch; swapped: boolean }
+    let ordered: Ordered[]
+
+    if (round === '32' && sorted.length === 16) {
+      // R32: hardcoded FIFA 2026 seeding order (no previous round to reference)
+      ordered = FIFA2026_R32_ORDER.map(i => ({ match: sorted[i]!, swapped: false }))
+    } else if (rounds.length > 0) {
+      // All subsequent rounds: derive position and home/away order from previous round
+      ordered = sortByBracketPosition(sorted, rounds[rounds.length - 1]!.matches)
+    } else {
+      ordered = sorted.map(m => ({ match: m, swapped: false }))
+    }
+
+    const bracketMatches: BracketMatch[] = ordered.map(({ match: m, swapped }) => {
+      const pen = penScoreMap[m.idEvent]
+      return {
         idEvent: m.idEvent,
-        homeTeam: m.strHomeTeam,
-        awayTeam: m.strAwayTeam,
-        homeBadge: m.strHomeTeamBadge,
-        awayBadge: m.strAwayTeamBadge,
-        homeScore: m.intHomeScore,
-        awayScore: m.intAwayScore,
-        homePenScore: penScoreMap[m.idEvent]?.home ?? null,
-        awayPenScore: penScoreMap[m.idEvent]?.away ?? null,
+        homeTeam: swapped ? m.strAwayTeam : m.strHomeTeam,
+        awayTeam: swapped ? m.strHomeTeam : m.strAwayTeam,
+        homeBadge: swapped ? m.strAwayTeamBadge : m.strHomeTeamBadge,
+        awayBadge: swapped ? m.strHomeTeamBadge : m.strAwayTeamBadge,
+        homeScore: swapped ? m.intAwayScore : m.intHomeScore,
+        awayScore: swapped ? m.intHomeScore : m.intAwayScore,
+        homePenScore: swapped ? (pen?.away ?? null) : (pen?.home ?? null),
+        awayPenScore: swapped ? (pen?.home ?? null) : (pen?.away ?? null),
         status: m.strStatus,
         timestamp: m.strTimestamp,
-      })),
-  }))
+      }
+    })
 
-  // build projected rounds from the last actual round if it has multiple matches
+    rounds.push({
+      round,
+      name: getRoundName(bracketMatches.length, index === total - 1, index === total - 2),
+      projected: false,
+      matches: bracketMatches,
+    })
+  }
+
+  // Build projected rounds from the last actual round if it has multiple matches
   const lastRound = rounds[rounds.length - 1]
   if (lastRound && lastRound.matches.length > 1) {
     rounds.push(...buildProjectedRounds(lastRound))
