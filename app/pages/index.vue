@@ -61,7 +61,7 @@ const leagueBadgeUrl = computed(() => {
 }
 
 .page-header__title {
-  font-size: 16px;
+  font-size: clamp(16px, 4vw, 26px);
   font-weight: bold;
 }
 
@@ -69,10 +69,6 @@ const leagueBadgeUrl = computed(() => {
   .page-header__logo {
     width: 48px;
     height: 48px;
-  }
-
-  .page-header__title {
-    font-size: 26px;
   }
 }
 </style>

@@ -5,7 +5,8 @@ const props = defineProps<{ match: Match }>()
 
 const liveStatuses = new Set(['1H', 'HT', '2H', 'ET', 'PEN'])
 const isLive = computed(() => liveStatuses.has(props.match.strStatus))
-const isPast = computed(() => props.match.strStatus === 'FT' || props.match.strStatus === 'AET')
+const isPast = computed(() => ['FT', 'AET', 'AP'].includes(props.match.strStatus))
+
 
 const statusMap: Record<string, string> = {
   NS: 'Не начался',
@@ -16,6 +17,7 @@ const statusMap: Record<string, string> = {
   PEN: 'Пенальти',
   FT: 'Завершён',
   AET: 'Завершён (ДВ)',
+  AP: 'Завершён (пен.)',
 }
 
 const formatStatus = (status: string) => statusMap[status] ?? status
@@ -54,6 +56,8 @@ const formatMoscowTime = (timestamp: string) =>
     <MatchScore
         :home-score="match.intHomeScore"
         :away-score="match.intAwayScore"
+        :home-pen-score="match.intHomeScoreExtra"
+        :away-pen-score="match.intAwayScoreExtra"
     />
     <MatchTeam
         :name="match.strAwayTeam"
@@ -72,7 +76,7 @@ const formatMoscowTime = (timestamp: string) =>
 }
 
 .match--live {
-  background-color: #fff0ef;
+  background-color: #f0fdf4;
   border-radius: 8px;
   padding: 12px;
   margin: 4px -12px;
@@ -80,7 +84,7 @@ const formatMoscowTime = (timestamp: string) =>
 }
 
 .match__meta {
-  width: 35px;
+  width: 50px;
   font-size: 12px;
   color: #333;
   flex-shrink: 0;
@@ -90,6 +94,7 @@ const formatMoscowTime = (timestamp: string) =>
   display: none;
   font-size: 12px;
   color: #777;
+  white-space: nowrap;
 }
 
 .match__tz {
@@ -98,10 +103,9 @@ const formatMoscowTime = (timestamp: string) =>
   color: #aaa;
 }
 
-@media (min-width: $breakpoint-desktop) {
+@media (min-width: $breakpoint-nav) {
   .match__meta {
-    width: 75px;
-    font-size: 14px;
+    width: 90px;
   }
 
   .match__status {
@@ -110,6 +114,13 @@ const formatMoscowTime = (timestamp: string) =>
 
   .match__tz {
     display: inline;
+  }
+}
+
+@media (min-width: $breakpoint-desktop) {
+  .match__meta {
+    width: 95px;
+    font-size: 14px;
   }
 
   .match__live {
@@ -127,6 +138,7 @@ const formatMoscowTime = (timestamp: string) =>
   gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #f87171;
+  color: #16a34a;
+  white-space: nowrap;
 }
 </style>

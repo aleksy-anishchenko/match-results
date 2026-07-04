@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Match } from '~/types'
 
-defineProps<{ matches: Record<string, Match[]> }>()
+defineProps<{ matches: Record<string, Match[]>; showDate?: boolean }>()
 </script>
 
 <template>
@@ -11,7 +11,7 @@ defineProps<{ matches: Record<string, Match[]> }>()
         :key="date"
         class="match-group"
     >
-      <h2 class="match-date">{{ formatReadableDate(String(date)) }}</h2>
+      <h2 v-if="showDate" class="match-date">{{ formatReadableDate(String(date)) }}</h2>
       <ul class="match-items">
         <li v-for="match in dayMatches" :key="match.idEvent">
           <MatchItem :match="match" />

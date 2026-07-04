@@ -1,21 +1,61 @@
 <script setup lang="ts">
-import type { StandingsResponse } from '~/types'
+import type { StandingsResponse, BracketResponse } from '~/types'
 
 useHead({ title: 'Турнирная таблица' })
 
-const { data } = await useFetch<StandingsResponse>('/api/standings')
+const activeTab = ref<'playoff' | 'groups'>('playoff')
 
-const groups = computed(() => data.value?.groups ?? {})
+const [{ data: standingsData }, { data: bracketData }] = await Promise.all([
+  useFetch<StandingsResponse>('/api/standings'),
+  useFetch<BracketResponse>('/api/bracket'),
+])
+
+const groups = computed(() => standingsData.value?.groups ?? {})
+const rounds = computed(() => bracketData.value?.rounds ?? [])
+
+const advancedTeams = computed(() => {
+  const r32 = bracketData.value?.rounds.find(r => !r.projected)
+  if (!r32) return null
+  const teams = new Set<string>()
+  for (const m of r32.matches) {
+    if (m.homeTeam) teams.add(m.homeTeam)
+    if (m.awayTeam) teams.add(m.awayTeam)
+  }
+  return teams
+})
 </script>
 
 <template>
-  <h1 class="page-title">Групповой этап</h1>
+  <h1 class="page-title">Турнирная таблица</h1>
 
-  <div class="groups">
+  <div class="tabs">
+    <button
+      class="tab"
+      :class="{ 'tab--active': activeTab === 'playoff' }"
+      @click="activeTab = 'playoff'"
+    >
+      Плей-офф
+    </button>
+    <button
+      class="tab"
+      :class="{ 'tab--active': activeTab === 'groups' }"
+      @click="activeTab = 'groups'"
+    >
+      Группы
+    </button>
+  </div>
+
+  <template v-if="activeTab === 'playoff'">
+    <p v-if="!rounds.length" class="empty">Плей-офф ещё не начался</p>
+    <TournamentBracket v-else :rounds="rounds" />
+  </template>
+
+  <template v-else>
+    <div class="groups">
       <div
-          v-for="(standings, letter) in groups"
-          :key="letter"
-          class="group"
+        v-for="(standings, letter) in groups"
+        :key="letter"
+        class="group"
       >
         <h2 class="group__title">Группа {{ letter }}</h2>
         <table class="table">
@@ -33,21 +73,23 @@ const groups = computed(() => data.value?.groups ?? {})
           </thead>
           <tbody>
             <tr
-                v-for="(row, index) in standings"
-                :key="row.team"
-                :class="{
-                  'table__row--advance': index < 2,
-                  'table__row--maybe': index === 2,
-                }"
+              v-for="(row, index) in standings"
+              :key="row.team"
+              :class="{
+                'table__row--advance': advancedTeams
+                  ? advancedTeams.has(row.team)
+                  : index < 2,
+                'table__row--maybe': !advancedTeams && index === 2,
+              }"
             >
               <td class="table__team">
                 <span class="table__position">{{ index + 1 }}</span>
                 <img
-                    :src="`/api/image?url=${encodeURIComponent(row.badge)}`"
-                    width="20"
-                    height="20"
-                    :alt="row.team"
-                    class="table__badge"
+                  :src="`/api/image?url=${encodeURIComponent(row.badge)}`"
+                  width="20"
+                  height="20"
+                  :alt="row.team"
+                  class="table__badge"
                 />
                 <span class="table__name">{{ getTeamName(row.team) }}</span>
               </td>
@@ -64,14 +106,50 @@ const groups = computed(() => data.value?.groups ?? {})
           </tbody>
         </table>
       </div>
-  </div>
+    </div>
+  </template>
 </template>
 
 <style scoped lang="scss">
 .page-title {
   font-size: 26px;
   font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #eee;
   margin-bottom: 24px;
+}
+
+.tab {
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #888;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: #333;
+  }
+
+  &--active {
+    color: #111;
+    border-bottom-color: #111;
+  }
+}
+
+.empty {
+  color: #aaa;
+  font-size: 14px;
+  padding: 32px 0;
 }
 
 .groups {
@@ -79,6 +157,12 @@ const groups = computed(() => data.value?.groups ?? {})
   grid-template-columns: 1fr;
   gap: 32px;
   padding-bottom: 48px;
+}
+
+.group {
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .group__title {
@@ -175,11 +259,7 @@ const groups = computed(() => data.value?.groups ?? {})
   color: #dc2626;
 }
 
-@media (min-width: $breakpoint-desktop) {
-  .groups {
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  }
-
+@media (min-width: $breakpoint-nav) {
   .table {
     font-size: 14px;
   }
@@ -200,6 +280,12 @@ const groups = computed(() => data.value?.groups ?? {})
   .table__goals-col,
   .table__goals {
     display: table-cell;
+  }
+}
+
+@media (min-width: $breakpoint-desktop) {
+  .groups {
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   }
 }
 </style>

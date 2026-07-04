@@ -24,8 +24,8 @@ watch(route, () => { isOpen.value = false })
 
     <div v-if="isOpen" class="mobile-nav">
       <ul>
-        <li><NuxtLink to="/">Результаты</NuxtLink></li>
-        <li><NuxtLink to="/standings">Таблица</NuxtLink></li>
+        <li><NuxtLink to="/">Результаты матчей</NuxtLink></li>
+        <li><NuxtLink to="/standings">Турнирная таблица</NuxtLink></li>
         <li><NuxtLink to="/about">О проекте</NuxtLink></li>
       </ul>
     </div>
@@ -130,7 +130,7 @@ watch(route, () => { isOpen.value = false })
   border-bottom: none;
 }
 
-@media (min-width: $breakpoint-desktop) {
+@media (min-width: $breakpoint-nav) {
   .nav { display: flex; }
   .burger { display: none; }
 }

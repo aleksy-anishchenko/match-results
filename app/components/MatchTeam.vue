@@ -60,6 +60,7 @@ const localName = computed(() => getTeamName(props.name))
   font-size: 13px;
 }
 
+
 @media (min-width: $breakpoint-desktop) {
   .team img { width: 30px; height: 30px; }
   .team--left { padding-right: 12px; }

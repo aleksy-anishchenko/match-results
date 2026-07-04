@@ -6,6 +6,8 @@ export type Match = {
   strAwayTeamBadge: string
   intHomeScore: string | null
   intAwayScore: string | null
+  intHomeScoreExtra: number | null
+  intAwayScoreExtra: number | null
   strStatus: string
   intProgress: string | null
   strTimestamp: string
@@ -33,4 +35,29 @@ export type GroupStanding = {
 
 export type StandingsResponse = {
   groups: Record<string, GroupStanding[]>
+}
+
+export type BracketMatch = {
+  idEvent: string
+  homeTeam: string
+  awayTeam: string
+  homeBadge: string
+  awayBadge: string
+  homeScore: string | null
+  awayScore: string | null
+  homePenScore: number | null
+  awayPenScore: number | null
+  status: string
+  timestamp: string
+}
+
+export type BracketRound = {
+  round: string
+  name: string
+  matches: BracketMatch[]
+  projected?: boolean
+}
+
+export type BracketResponse = {
+  rounds: BracketRound[]
 }
