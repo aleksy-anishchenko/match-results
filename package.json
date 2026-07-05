@@ -5,28 +5,34 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check": "npm run lint && npm run typecheck && npm test",
+    "prepare": "husky"
   },
   "dependencies": {
     "@primeuix/themes": "^2.0.3",
-    "pinia": "^3.0.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.5",
     "vue": "^3.5.35",
     "vue-router": "^5.1.0"
   },
   "devDependencies": {
-    "@pinia/nuxt": "^0.11.3",
+    "@nuxt/eslint": "^1.16.0",
     "@primevue/nuxt-module": "^4.5.5",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/test-utils": "^2.4.11",
+    "eslint": "^10.6.0",
     "happy-dom": "^20.10.6",
+    "husky": "^9.1.7",
     "nuxt": "^4.4.8",
     "sass": "^1.101.0",
-    "vitest": "^3.2.6"
+    "typescript": "^6.0.3",
+    "vitest": "^3.2.6",
+    "vue-tsc": "^3.3.6"
   }
 }

@@ -1,19 +1,19 @@
 export type Match = {
   idEvent: string
-  strHomeTeam: string
-  strAwayTeam: string
-  strHomeTeamBadge: string
-  strAwayTeamBadge: string
-  intHomeScore: string | null
-  intAwayScore: string | null
-  intHomeScoreExtra: number | null
-  intAwayScoreExtra: number | null
-  strStatus: string
-  intProgress: string | null
-  strTimestamp: string
-  dateEvent: string
-  strGroup: string | null
-  strSeason: string
+  homeTeam: string
+  awayTeam: string
+  homeBadge: string
+  awayBadge: string
+  homeScore: string | null
+  awayScore: string | null
+  homePenScore: number | null
+  awayPenScore: number | null
+  status: string
+  progress: string | null
+  timestamp: string
+  date: string
+  group: string | null
+  season: string
 }
 
 export type MatchesResponse = {

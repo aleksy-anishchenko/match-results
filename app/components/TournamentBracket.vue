@@ -3,107 +3,111 @@ import type { BracketRound } from '~/types'
 
 const props = defineProps<{ rounds: BracketRound[] }>()
 
-// Layout constants — CARD_H must match the CSS height value
-const CARD_H = 50
-const CARD_W = 148
-const CARD_GAP = 6   // gap between first-round cards
-const CONN_W = 16    // width of connector column between rounds
-const UNIT = CARD_H + CARD_GAP
+// Layout constants — CARD_HEIGHT must match the CSS height value
+const CARD_HEIGHT = 50
+const CARD_WIDTH = 148
+const CARD_GAP = 6 // gap between first-round cards
+const CONNECTOR_WIDTH = 16 // width of connector column between rounds
+const ROW_HEIGHT = CARD_HEIGHT + CARD_GAP
 
-const firstCount = computed(() => props.rounds[0]?.matches.length ?? 0)
-const totalH = computed(() => firstCount.value * UNIT - CARD_GAP)
-const totalW = computed(() => props.rounds.length * CARD_W + Math.max(0, props.rounds.length - 1) * CONN_W)
+const firstRoundMatchCount = computed(() => props.rounds[0]?.matches.length ?? 0)
+const totalHeight = computed(() => firstRoundMatchCount.value * ROW_HEIGHT - CARD_GAP)
+const totalWidth = computed(() => props.rounds.length * CARD_WIDTH + Math.max(0, props.rounds.length - 1) * CONNECTOR_WIDTH)
 
-function matchTop(ri: number, mi: number): number {
-  const step = 2 ** ri
-  return ((step - 1) / 2 + mi * step) * UNIT
+// Each round's matches span twice as many rows as the previous round's,
+// since every match here is fed by two matches from the round before it.
+function matchTopOffset(roundIndex: number, matchIndex: number): number {
+  const rowsPerMatch = 2 ** roundIndex
+  return ((rowsPerMatch - 1) / 2 + matchIndex * rowsPerMatch) * ROW_HEIGHT
 }
 
-function colLeft(ri: number): number {
-  return ri * (CARD_W + CONN_W)
+function columnLeft(roundIndex: number): number {
+  return roundIndex * (CARD_WIDTH + CONNECTOR_WIDTH)
 }
 
-function connPath(ri: number, nextCount: number): string {
-  const cx = CONN_W / 2
-  return Array.from({ length: nextCount }, (_, k) => {
-    const y1 = matchTop(ri, 2 * k) + CARD_H / 2
-    const y2 = matchTop(ri, 2 * k + 1) + CARD_H / 2
-    const ym = (y1 + y2) / 2
-    return `M0,${y1}H${cx}V${y2}H0M${cx},${ym}H${CONN_W}`
+function connectorPath(roundIndex: number, nextRoundMatchCount: number): string {
+  const centerX = CONNECTOR_WIDTH / 2
+  return Array.from({ length: nextRoundMatchCount }, (_, pairIndex) => {
+    const topMatchCenterY = matchTopOffset(roundIndex, 2 * pairIndex) + CARD_HEIGHT / 2
+    const bottomMatchCenterY = matchTopOffset(roundIndex, 2 * pairIndex + 1) + CARD_HEIGHT / 2
+    const midpointY = (topMatchCenterY + bottomMatchCenterY) / 2
+    return `M0,${topMatchCenterY}H${centerX}V${bottomMatchCenterY}H0M${centerX},${midpointY}H${CONNECTOR_WIDTH}`
   }).join(' ')
-}
-
-const DONE = new Set(['FT', 'AET', 'AP'])
-
-type Match = BracketRound['matches'][number]
-
-function result(m: Match): 'home' | 'away' | null {
-  if (!DONE.has(m.status)) return null
-  const h = Number(m.homeScore ?? 0)
-  const a = Number(m.awayScore ?? 0)
-  if (h > a) return 'home'
-  if (a > h) return 'away'
-  if (m.status === 'AP') {
-    const hp = m.homePenScore ?? 0
-    const ap = m.awayPenScore ?? 0
-    if (hp > ap) return 'home'
-    if (ap > hp) return 'away'
-  }
-  return null
-}
-
-const liveMap: Record<string, string> = {
-  '1H': '1T', HT: 'Пер.', '2H': '2T', ET: 'ДВ', PEN: 'Пен.',
 }
 </script>
 
 <template>
-  <div v-if="rounds.length" class="bs">
+  <div
+    v-if="rounds.length"
+    class="bs"
+  >
     <!-- Round name headers -->
-    <div class="bs-header" :style="{ width: totalW + 'px' }">
-      <template v-for="(round, ri) in rounds" :key="ri">
-        <div class="bs-title" :style="{ width: CARD_W + 'px' }">
+    <div
+      class="bs-header"
+      :style="{ width: totalWidth + 'px' }"
+    >
+      <template
+        v-for="(round, roundIndex) in rounds"
+        :key="roundIndex"
+      >
+        <div
+          class="bs-title"
+          :style="{ width: CARD_WIDTH + 'px' }"
+        >
           {{ round.name }}
         </div>
-        <div v-if="ri < rounds.length - 1" :style="{ width: CONN_W + 'px', flexShrink: 0 }" />
+        <div
+          v-if="roundIndex < rounds.length - 1"
+          :style="{ width: CONNECTOR_WIDTH + 'px', flexShrink: 0 }"
+        />
       </template>
     </div>
 
     <!-- Bracket body -->
-    <div class="bs-body" :style="{ width: totalW + 'px', height: totalH + 'px' }">
-
+    <div
+      class="bs-body"
+      :style="{ width: totalWidth + 'px', height: totalHeight + 'px' }"
+    >
       <!-- Match card columns -->
       <div
-        v-for="(round, ri) in rounds"
-        :key="'col-' + ri"
+        v-for="(round, roundIndex) in rounds"
+        :key="'col-' + roundIndex"
         class="bs-col"
-        :style="{ left: colLeft(ri) + 'px', width: CARD_W + 'px' }"
+        :style="{ left: columnLeft(roundIndex) + 'px', width: CARD_WIDTH + 'px' }"
       >
         <div
-          v-for="(match, mi) in round.matches"
+          v-for="(match, matchIndex) in round.matches"
           :key="match.idEvent"
           class="mc"
-          :class="{ 'mc--proj': round.projected, 'mc--done': DONE.has(match.status) }"
-          :style="{ top: matchTop(ri, mi) + 'px' }"
+          :class="{ 'mc--proj': round.projected, 'mc--done': FINISHED_MATCH_STATUSES.has(match.status) }"
+          :style="{ top: matchTopOffset(roundIndex, matchIndex) + 'px' }"
         >
           <!-- Home team row -->
           <div
             class="mc-team"
             :class="{
-              'mc-team--win': result(match) === 'home',
-              'mc-team--lose': result(match) === 'away',
+              'mc-team--win': getMatchWinnerSide(match) === 'home',
+              'mc-team--lose': getMatchWinnerSide(match) === 'away',
               'mc-team--tbd': !match.homeTeam,
             }"
           >
             <img
               v-if="match.homeBadge"
               :src="`/api/image?url=${encodeURIComponent(match.homeBadge)}`"
-              width="16" height="16" class="mc-badge"
+              width="16"
+              height="16"
+              class="mc-badge"
               :alt="match.homeTeam"
-            />
+            >
             <span class="mc-name">{{ getTeamName(match.homeTeam) || 'Не определен' }}</span>
-            <span v-if="DONE.has(match.status) && match.homeScore !== null" class="mc-score">
-              {{ match.homeScore }}<sup v-if="match.homePenScore != null" class="mc-pen">{{ match.homePenScore }}</sup>
+            <span
+              v-if="FINISHED_MATCH_STATUSES.has(match.status) && match.homeScore !== null"
+              class="mc-score"
+            >
+              {{ match.homeScore }}<sup
+                v-if="match.homePenScore != null"
+                class="mc-pen"
+              >{{ match.homePenScore }}</sup>
             </span>
           </div>
 
@@ -113,44 +117,54 @@ const liveMap: Record<string, string> = {
           <div
             class="mc-team"
             :class="{
-              'mc-team--win': result(match) === 'away',
-              'mc-team--lose': result(match) === 'home',
+              'mc-team--win': getMatchWinnerSide(match) === 'away',
+              'mc-team--lose': getMatchWinnerSide(match) === 'home',
               'mc-team--tbd': !match.awayTeam,
             }"
           >
             <img
               v-if="match.awayBadge"
               :src="`/api/image?url=${encodeURIComponent(match.awayBadge)}`"
-              width="16" height="16" class="mc-badge"
+              width="16"
+              height="16"
+              class="mc-badge"
               :alt="match.awayTeam"
-            />
+            >
             <span class="mc-name">{{ getTeamName(match.awayTeam) || 'Не определен' }}</span>
-            <span v-if="DONE.has(match.status) && match.awayScore !== null" class="mc-score">
-              {{ match.awayScore }}<sup v-if="match.awayPenScore != null" class="mc-pen">{{ match.awayPenScore }}</sup>
+            <span
+              v-if="FINISHED_MATCH_STATUSES.has(match.status) && match.awayScore !== null"
+              class="mc-score"
+            >
+              {{ match.awayScore }}<sup
+                v-if="match.awayPenScore != null"
+                class="mc-pen"
+              >{{ match.awayPenScore }}</sup>
             </span>
           </div>
         </div>
       </div>
 
       <!-- SVG connectors between rounds -->
-      <template v-for="(_, ri) in rounds" :key="'conn-' + ri">
+      <template
+        v-for="(_, roundIndex) in rounds"
+        :key="'conn-' + roundIndex"
+      >
         <svg
-          v-if="ri < rounds.length - 1"
+          v-if="roundIndex < rounds.length - 1"
           class="bs-conn"
-          :style="{ left: colLeft(ri) + CARD_W + 'px' }"
-          :width="CONN_W"
-          :height="totalH"
+          :style="{ left: columnLeft(roundIndex) + CARD_WIDTH + 'px' }"
+          :width="CONNECTOR_WIDTH"
+          :height="totalHeight"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            :d="connPath(ri, rounds[ri + 1]!.matches.length)"
+            :d="connectorPath(roundIndex, rounds[roundIndex + 1]!.matches.length)"
             stroke="#c8c8c8"
             stroke-width="1.5"
             fill="none"
           />
         </svg>
       </template>
-
     </div>
   </div>
 </template>
@@ -182,7 +196,6 @@ const liveMap: Record<string, string> = {
   gap: 5px;
 }
 
-
 .bs-body {
   position: relative;
 }
@@ -201,7 +214,7 @@ const liveMap: Record<string, string> = {
 .mc {
   position: absolute;
   width: 100%;
-  height: 50px; /* must match CARD_H constant in script */
+  height: 50px; /* must match CARD_HEIGHT constant in script */
   border: 1px solid #e5e5e5;
   border-radius: 6px;
   background: #fff;
@@ -248,7 +261,6 @@ const liveMap: Record<string, string> = {
   object-fit: contain;
 }
 
-
 .mc-name {
   flex: 1;
   white-space: nowrap;
@@ -270,13 +282,6 @@ const liveMap: Record<string, string> = {
   font-weight: 500;
   color: #888;
   vertical-align: super;
-}
-
-.mc-live {
-  font-size: 10px;
-  font-weight: 600;
-  color: #16a34a;
-  flex-shrink: 0;
 }
 
 .mc-sep {

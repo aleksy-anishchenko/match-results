@@ -26,7 +26,6 @@ type V1Response = {
 }
 
 const GROUP_ROUNDS = new Set(['1', '2', '3'])
-const FINISHED = new Set(['FT', 'AET', 'AP'])
 
 // FIFA 2026 official bracket display order for Round of 32 (intRound = '32')
 // Maps from timestamp-sorted index to bracket seeding position so that
@@ -39,9 +38,9 @@ const FIFA2026_R32_ORDER = [0, 3, 2, 5, 8, 9, 10, 11, 1, 4, 6, 7, 12, 15, 13, 14
 function sortByBracketPosition(
   matches: ApiMatch[],
   prevMatches: BracketMatch[],
-): Array<{ match: ApiMatch; swapped: boolean }> {
+): Array<{ match: ApiMatch, swapped: boolean }> {
   const slotCount = Math.floor(prevMatches.length / 2)
-  const result: ({ match: ApiMatch; swapped: boolean } | null)[] = new Array(slotCount).fill(null)
+  const result: ({ match: ApiMatch, swapped: boolean } | null)[] = new Array(slotCount).fill(null)
   const placedIds = new Set<string>()
 
   for (const match of matches) {
@@ -64,9 +63,9 @@ function sortByBracketPosition(
     }
   }
 
-  const remaining = matches.filter(m => !placedIds.has(m.idEvent))
-  let ri = 0
-  return result.map(r => r ?? { match: remaining[ri++] ?? matches[0]!, swapped: false })
+  const remaining = matches.filter(match => !placedIds.has(match.idEvent))
+  let remainingIndex = 0
+  return result.map(slot => slot ?? { match: remaining[remainingIndex++] ?? matches[0]!, swapped: false })
 }
 
 function getRoundName(count: number, isLast: boolean, isSecondToLast: boolean): string {
@@ -79,18 +78,10 @@ function getRoundName(count: number, isLast: boolean, isSecondToLast: boolean): 
   return 'Раунд'
 }
 
-function matchWinner(m: BracketMatch): { team: string; badge: string } | null {
-  if (!FINISHED.has(m.status)) return null
-  const h = Number(m.homeScore ?? 0)
-  const a = Number(m.awayScore ?? 0)
-  if (h > a) return { team: m.homeTeam, badge: m.homeBadge }
-  if (a > h) return { team: m.awayTeam, badge: m.awayBadge }
-  if (m.status === 'AP') {
-    const hp = m.homePenScore ?? 0
-    const ap = m.awayPenScore ?? 0
-    if (hp > ap) return { team: m.homeTeam, badge: m.homeBadge }
-    if (ap > hp) return { team: m.awayTeam, badge: m.awayBadge }
-  }
+function matchWinner(match: BracketMatch): { team: string, badge: string } | null {
+  const winnerSide = getMatchWinnerSide(match)
+  if (winnerSide === 'home') return { team: match.homeTeam, badge: match.homeBadge }
+  if (winnerSide === 'away') return { team: match.awayTeam, badge: match.awayBadge }
   return null
 }
 
@@ -101,16 +92,16 @@ function buildProjectedRounds(seed: BracketRound): BracketRound[] {
   while (prev.length > 1) {
     const next: BracketMatch[] = []
     for (let i = 0; i < prev.length; i += 2) {
-      const m1 = prev[i]!
-      const m2 = prev[i + 1]
-      const w1 = matchWinner(m1)
-      const w2 = m2 ? matchWinner(m2) : null
+      const topMatch = prev[i]!
+      const bottomMatch = prev[i + 1]
+      const topWinner = matchWinner(topMatch)
+      const bottomWinner = bottomMatch ? matchWinner(bottomMatch) : null
       next.push({
         idEvent: `proj-${result.length}-${i}`,
-        homeTeam: w1?.team ?? '',
-        awayTeam: w2?.team ?? '',
-        homeBadge: w1?.badge ?? '',
-        awayBadge: w2?.badge ?? '',
+        homeTeam: topWinner?.team ?? '',
+        awayTeam: bottomWinner?.team ?? '',
+        homeBadge: topWinner?.badge ?? '',
+        awayBadge: bottomWinner?.badge ?? '',
         homeScore: null,
         awayScore: null,
         homePenScore: null,
@@ -139,7 +130,7 @@ export default cachedEventHandler(async () => {
   const v1Base = 'https://www.thesportsdb.com/api/v1/json'
 
   const nextData = await $fetch<ScheduleResponse>(
-    `${apiBase}/schedule/next/league/4429`,
+    `${apiBase}/schedule/next/league/${WORLD_CUP_LEAGUE_ID}`,
     { headers },
   )
 
@@ -147,25 +138,25 @@ export default cachedEventHandler(async () => {
   if (!season) return { rounds: [] }
 
   const data = await $fetch<ScheduleResponse>(
-    `${apiBase}/schedule/league/4429/${season}`,
+    `${apiBase}/schedule/league/${WORLD_CUP_LEAGUE_ID}/${season}`,
     { headers },
   )
 
-  const playoffMatches = data.schedule.filter(m => !GROUP_ROUNDS.has(m.intRound))
+  const playoffMatches = data.schedule.filter(match => !GROUP_ROUNDS.has(match.intRound))
   if (!playoffMatches.length) return { rounds: [] }
 
   // Fetch penalty scores for AP matches from v1 API
-  const apMatches = playoffMatches.filter(m => m.strStatus === 'AP')
-  const penScoreMap: Record<string, { home: number | null; away: number | null }> = {}
+  const apMatches = playoffMatches.filter(match => match.strStatus === 'AP')
+  const penScoreMap: Record<string, { home: number | null, away: number | null }> = {}
   if (apMatches.length) {
-    await Promise.all(apMatches.map(async (m) => {
+    await Promise.all(apMatches.map(async (match) => {
       const v1 = await $fetch<V1Response>(
-        `${v1Base}/${config.theSportsDbApiKey}/lookupevent.php?id=${m.idEvent}`,
+        `${v1Base}/${config.theSportsDbApiKey}/lookupevent.php?id=${match.idEvent}`,
       ).catch(() => null)
-      const ev = v1?.events?.[0]
-      penScoreMap[m.idEvent] = {
-        home: ev?.intHomeScoreExtra != null ? Number(ev.intHomeScoreExtra) : null,
-        away: ev?.intAwayScoreExtra != null ? Number(ev.intAwayScoreExtra) : null,
+      const eventDetails = v1?.events?.[0]
+      penScoreMap[match.idEvent] = {
+        home: eventDetails?.intHomeScoreExtra != null ? Number(eventDetails.intHomeScoreExtra) : null,
+        away: eventDetails?.intAwayScoreExtra != null ? Number(eventDetails.intAwayScoreExtra) : null,
       }
     }))
   }
@@ -176,7 +167,23 @@ export default cachedEventHandler(async () => {
     byRound[match.intRound]!.push(match)
   }
 
-  const sortedKeys = Object.keys(byRound).sort((a, b) => Number(b) - Number(a))
+  // A real knockout ladder halves in size each round (16 matches, then 8, then 4...).
+  // The provider occasionally adds an extra fixture under an unrelated round id
+  // (e.g. a third-place playoff) that breaks that sequence — walking the chain from
+  // the biggest round and stopping at the first gap keeps only rounds that actually
+  // belong to the ladder, so a stray fixture can't corrupt the bracket layout.
+  const matchCountsByRound = Object.fromEntries(
+    Object.entries(byRound).map(([round, matches]) => [round, matches.length]),
+  )
+  const maxMatchCount = Math.max(...Object.values(matchCountsByRound))
+  const ladderMatchCounts = new Set<number>()
+  for (let count = maxMatchCount; Object.values(matchCountsByRound).includes(count); count /= 2) {
+    ladderMatchCounts.add(count)
+  }
+
+  const sortedKeys = Object.keys(byRound)
+    .filter(round => ladderMatchCounts.has(matchCountsByRound[round]!))
+    .sort((a, b) => matchCountsByRound[b]! - matchCountsByRound[a]!)
   const total = sortedKeys.length
 
   const rounds: BracketRound[] = []
@@ -185,33 +192,35 @@ export default cachedEventHandler(async () => {
     const round = sortedKeys[index]!
     const sorted = byRound[round]!.sort((a, b) => a.strTimestamp.localeCompare(b.strTimestamp))
 
-    type Ordered = { match: ApiMatch; swapped: boolean }
+    type Ordered = { match: ApiMatch, swapped: boolean }
     let ordered: Ordered[]
 
     if (round === '32' && sorted.length === 16) {
       // R32: hardcoded FIFA 2026 seeding order (no previous round to reference)
       ordered = FIFA2026_R32_ORDER.map(i => ({ match: sorted[i]!, swapped: false }))
-    } else if (rounds.length > 0) {
+    }
+    else if (rounds.length > 0) {
       // All subsequent rounds: derive position and home/away order from previous round
       ordered = sortByBracketPosition(sorted, rounds[rounds.length - 1]!.matches)
-    } else {
-      ordered = sorted.map(m => ({ match: m, swapped: false }))
+    }
+    else {
+      ordered = sorted.map(match => ({ match, swapped: false }))
     }
 
-    const bracketMatches: BracketMatch[] = ordered.map(({ match: m, swapped }) => {
-      const pen = penScoreMap[m.idEvent]
+    const bracketMatches: BracketMatch[] = ordered.map(({ match, swapped }) => {
+      const pen = penScoreMap[match.idEvent]
       return {
-        idEvent: m.idEvent,
-        homeTeam: swapped ? m.strAwayTeam : m.strHomeTeam,
-        awayTeam: swapped ? m.strHomeTeam : m.strAwayTeam,
-        homeBadge: swapped ? m.strAwayTeamBadge : m.strHomeTeamBadge,
-        awayBadge: swapped ? m.strHomeTeamBadge : m.strAwayTeamBadge,
-        homeScore: swapped ? m.intAwayScore : m.intHomeScore,
-        awayScore: swapped ? m.intHomeScore : m.intAwayScore,
+        idEvent: match.idEvent,
+        homeTeam: swapped ? match.strAwayTeam : match.strHomeTeam,
+        awayTeam: swapped ? match.strHomeTeam : match.strAwayTeam,
+        homeBadge: swapped ? match.strAwayTeamBadge : match.strHomeTeamBadge,
+        awayBadge: swapped ? match.strHomeTeamBadge : match.strAwayTeamBadge,
+        homeScore: swapped ? match.intAwayScore : match.intHomeScore,
+        awayScore: swapped ? match.intHomeScore : match.intAwayScore,
         homePenScore: swapped ? (pen?.away ?? null) : (pen?.home ?? null),
         awayPenScore: swapped ? (pen?.home ?? null) : (pen?.away ?? null),
-        status: m.strStatus,
-        timestamp: m.strTimestamp,
+        status: match.strStatus,
+        timestamp: match.strTimestamp,
       }
     })
 
@@ -232,5 +241,5 @@ export default cachedEventHandler(async () => {
   return { rounds }
 }, {
   maxAge: 60,
-  getKey: () => 'bracket-4429',
+  getKey: () => `bracket-${WORLD_CUP_LEAGUE_ID}`,
 })

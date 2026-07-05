@@ -4,65 +4,68 @@ import type { Match } from '~/types'
 const props = defineProps<{ match: Match }>()
 
 const liveStatuses = new Set(['1H', 'HT', '2H', 'ET', 'PEN'])
-const isLive = computed(() => liveStatuses.has(props.match.strStatus))
-const isPast = computed(() => ['FT', 'AET', 'AP'].includes(props.match.strStatus))
-
+const isLive = computed(() => liveStatuses.has(props.match.status))
+const isPast = computed(() => FINISHED_MATCH_STATUSES.has(props.match.status))
 
 const statusMap: Record<string, string> = {
-  NS: 'Не начался',
+  'NS': 'Не начался',
   '1H': '1-й тайм',
-  HT: 'Перерыв',
+  'HT': 'Перерыв',
   '2H': '2-й тайм',
-  ET: 'Доп. время',
-  PEN: 'Пенальти',
-  FT: 'Завершён',
-  AET: 'Завершён (ДВ)',
-  AP: 'Завершён (пен.)',
+  'ET': 'Доп. время',
+  'PEN': 'Пенальти',
+  'FT': 'Завершён',
+  'AET': 'Завершён (ДВ)',
+  'AP': 'Завершён (пен.)',
 }
 
 const formatStatus = (status: string) => statusMap[status] ?? status
 
 const formatMoscowTime = (timestamp: string) =>
-    new Date(timestamp + 'Z').toLocaleTimeString('ru-RU', {
-      timeZone: 'Europe/Moscow',
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+  new Date(timestamp + 'Z').toLocaleTimeString('ru-RU', {
+    timeZone: 'Europe/Moscow',
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 </script>
 
 <template>
   <div
-      class="match"
-      :class="{ 'match--live': isLive, 'match--past': isPast }"
+    class="match"
+    :class="{ 'match--live': isLive, 'match--past': isPast }"
   >
     <div class="match__meta">
       <template v-if="isLive">
         <div class="match__live">
-          <span v-if="match.intProgress != null">{{ match.intProgress }}'</span>
-          <span v-else>{{ formatStatus(match.strStatus) }}</span>
+          <span v-if="match.progress != null">{{ match.progress }}'</span>
+          <span v-else>{{ formatStatus(match.status) }}</span>
         </div>
       </template>
       <template v-else>
-        <div class="match__time">{{ formatMoscowTime(match.strTimestamp) }} <span class="match__tz">МСК</span></div>
-        <div class="match__status">{{ formatStatus(match.strStatus) }}</div>
+        <div class="match__time">
+          {{ formatMoscowTime(match.timestamp) }} <span class="match__tz">МСК</span>
+        </div>
+        <div class="match__status">
+          {{ formatStatus(match.status) }}
+        </div>
       </template>
     </div>
     <MatchTeam
-        :name="match.strHomeTeam"
-        :badge="match.strHomeTeamBadge"
-        side="left"
+      :name="match.homeTeam"
+      :badge="match.homeBadge"
+      side="left"
     />
     <MatchScore
-        :home-score="match.intHomeScore"
-        :away-score="match.intAwayScore"
-        :home-pen-score="match.intHomeScoreExtra"
-        :away-pen-score="match.intAwayScoreExtra"
+      :home-score="match.homeScore"
+      :away-score="match.awayScore"
+      :home-pen-score="match.homePenScore"
+      :away-pen-score="match.awayPenScore"
     />
     <MatchTeam
-        :name="match.strAwayTeam"
-        :badge="match.strAwayTeamBadge"
-        side="right"
+      :name="match.awayTeam"
+      :badge="match.awayBadge"
+      side="right"
     />
   </div>
 </template>

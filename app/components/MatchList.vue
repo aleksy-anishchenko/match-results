@@ -1,19 +1,27 @@
 <script setup lang="ts">
 import type { Match } from '~/types'
 
-defineProps<{ matches: Record<string, Match[]>; showDate?: boolean }>()
+defineProps<{ matches: Record<string, Match[]>, showDate?: boolean }>()
 </script>
 
 <template>
   <ul class="match-list">
     <li
-        v-for="(dayMatches, date) in matches"
-        :key="date"
-        class="match-group"
+      v-for="(dayMatches, date) in matches"
+      :key="date"
+      class="match-group"
     >
-      <h2 v-if="showDate" class="match-date">{{ formatReadableDate(String(date)) }}</h2>
+      <h2
+        v-if="showDate"
+        class="match-date"
+      >
+        {{ formatReadableDate(String(date)) }}
+      </h2>
       <ul class="match-items">
-        <li v-for="match in dayMatches" :key="match.idEvent">
+        <li
+          v-for="match in dayMatches"
+          :key="match.idEvent"
+        >
           <MatchItem :match="match" />
         </li>
       </ul>

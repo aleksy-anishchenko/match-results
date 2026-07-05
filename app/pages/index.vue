@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import type {MatchesResponse} from '~/types'
+import type { MatchesResponse } from '~/types'
 
 const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
 const dateRange = ref({ from: today, to: today })
 
 const { data, pending } = await useFetch<MatchesResponse>('/api/matches', {
   query: computed(() => ({
-    leagueId: '4429',
+    leagueId: WORLD_CUP_LEAGUE_ID,
     dateFrom: dateRange.value.from,
     dateTo: dateRange.value.to,
-  }))
+  })),
 })
 
 const groupedMatches = computed(() =>
-    groupMatchesByDate(data.value?.matches ?? [])
+  groupMatchesByDate(data.value?.matches ?? []),
 )
 
 const { data: leagueData } = await useFetch<{ badge: string | null }>('/api/league', {
-  query: { leagueId: '4429' }
+  query: { leagueId: WORLD_CUP_LEAGUE_ID },
 })
 
 const leagueBadgeUrl = computed(() => {
@@ -27,22 +27,30 @@ const leagueBadgeUrl = computed(() => {
 </script>
 
 <template>
-  <div class="page-header">
-    <img
+  <div>
+    <div class="page-header">
+      <img
         v-if="leagueBadgeUrl"
         :src="leagueBadgeUrl"
         alt="FIFA World Cup 2026"
         class="page-header__logo"
-    />
-    <h1 class="page-header__title">Чемпионат мира по футболу FIFA 2026</h1>
-  </div>
-  <AppFilter @change="dateRange = $event" />
-  <p v-if="pending">Загрузка...</p>
-  <p v-else-if="!Object.keys(groupedMatches).length">Матчей нет</p>
-  <MatchList
+      >
+      <h1 class="page-header__title">
+        Чемпионат мира по футболу FIFA 2026
+      </h1>
+    </div>
+    <AppFilter @change="dateRange = $event" />
+    <p v-if="pending">
+      Загрузка...
+    </p>
+    <p v-else-if="!Object.keys(groupedMatches).length">
+      Матчей нет
+    </p>
+    <MatchList
       v-else
       :matches="groupedMatches"
-  />
+    />
+  </div>
 </template>
 
 <style scoped lang="scss">

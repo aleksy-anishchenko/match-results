@@ -2,17 +2,35 @@ import Aura from '@primeuix/themes/aura'
 import { resolve } from 'path'
 
 export default defineNuxtConfig({
+  modules: ['@primevue/nuxt-module', '@nuxt/eslint'],
+  devtools: { enabled: true },
+  css: ['~/assets/css/fonts.css', '~/assets/css/global.scss', 'primeicons/primeicons.css'],
   runtimeConfig: {
-    theSportsDbApiKey: ''
+    theSportsDbApiKey: '',
   },
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
-  modules: ['@pinia/nuxt', '@primevue/nuxt-module'],
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: (content: string, filepath: string) => {
+            if (filepath.includes('_variables')) return content
+            return `@use "${resolve('./app/assets/css/_variables')}" as *;\n${content}`
+          },
+        },
+      },
+    },
+  },
+  eslint: {
+    config: {
+      stylistic: true,
+    },
+  },
   primevue: {
     options: {
       theme: {
         preset: Aura,
-        options: { darkModeSelector: false }
+        options: { darkModeSelector: false },
       },
       locale: {
         firstDayOfWeek: 1,
@@ -23,20 +41,8 @@ export default defineNuxtConfig({
         monthNamesShort: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
         today: 'Сегодня',
         clear: 'Очистить',
-      }
-    }
+        fileSizeTypes: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+      },
+    },
   },
-  css: ['~/assets/css/fonts.css', '~/assets/css/global.scss', 'primeicons/primeicons.css'],
-  vite: {
-    css: {
-      preprocessorOptions: {
-        scss: {
-          additionalData: (content: string, filepath: string) => {
-            if (filepath.includes('_variables')) return content
-            return `@use "${resolve('./app/assets/css/_variables')}" as *;\n${content}`
-          }
-        }
-      }
-    }
-  }
 })

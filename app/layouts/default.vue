@@ -1,6 +1,8 @@
 <template>
-  <AppHeader />
-  <main class="container">
-    <slot />
-  </main>
+  <div>
+    <AppHeader />
+    <main class="container">
+      <slot />
+    </main>
+  </div>
 </template>

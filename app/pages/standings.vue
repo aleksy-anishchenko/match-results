@@ -14,100 +14,147 @@ const groups = computed(() => standingsData.value?.groups ?? {})
 const rounds = computed(() => bracketData.value?.rounds ?? [])
 
 const advancedTeams = computed(() => {
-  const r32 = bracketData.value?.rounds.find(r => !r.projected)
-  if (!r32) return null
+  const roundOf32 = bracketData.value?.rounds.find(round => !round.projected)
+  if (!roundOf32) return null
   const teams = new Set<string>()
-  for (const m of r32.matches) {
-    if (m.homeTeam) teams.add(m.homeTeam)
-    if (m.awayTeam) teams.add(m.awayTeam)
+  for (const match of roundOf32.matches) {
+    if (match.homeTeam) teams.add(match.homeTeam)
+    if (match.awayTeam) teams.add(match.awayTeam)
   }
   return teams
 })
+
+function isAdvancing(team: string, index: number): boolean {
+  return advancedTeams.value ? advancedTeams.value.has(team) : index < 2
+}
+
+function isPossiblyAdvancing(index: number): boolean {
+  return !advancedTeams.value && index === 2
+}
+
+function goalDiffClass(goalDiff: number): string {
+  if (goalDiff > 0) return 'table__diff--pos'
+  if (goalDiff < 0) return 'table__diff--neg'
+  return ''
+}
 </script>
 
 <template>
-  <h1 class="page-title">Турнирная таблица</h1>
+  <div>
+    <h1 class="page-title">
+      Турнирная таблица
+    </h1>
 
-  <div class="tabs">
-    <button
-      class="tab"
-      :class="{ 'tab--active': activeTab === 'playoff' }"
-      @click="activeTab = 'playoff'"
-    >
-      Плей-офф
-    </button>
-    <button
-      class="tab"
-      :class="{ 'tab--active': activeTab === 'groups' }"
-      @click="activeTab = 'groups'"
-    >
-      Группы
-    </button>
-  </div>
-
-  <template v-if="activeTab === 'playoff'">
-    <p v-if="!rounds.length" class="empty">Плей-офф ещё не начался</p>
-    <TournamentBracket v-else :rounds="rounds" />
-  </template>
-
-  <template v-else>
-    <div class="groups">
-      <div
-        v-for="(standings, letter) in groups"
-        :key="letter"
-        class="group"
+    <div class="tabs">
+      <button
+        class="tab"
+        :class="{ 'tab--active': activeTab === 'playoff' }"
+        @click="activeTab = 'playoff'"
       >
-        <h2 class="group__title">Группа {{ letter }}</h2>
-        <table class="table">
-          <thead>
-            <tr>
-              <th class="table__team-col"></th>
-              <th title="Игры">И</th>
-              <th title="Победы">В</th>
-              <th title="Ничьи">Н</th>
-              <th title="Поражения">П</th>
-              <th class="table__goals-col" title="Голы забитые : пропущенные">Г</th>
-              <th title="Разность голов">РГ</th>
-              <th title="Очки">О</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(row, index) in standings"
-              :key="row.team"
-              :class="{
-                'table__row--advance': advancedTeams
-                  ? advancedTeams.has(row.team)
-                  : index < 2,
-                'table__row--maybe': !advancedTeams && index === 2,
-              }"
-            >
-              <td class="table__team">
-                <span class="table__position">{{ index + 1 }}</span>
-                <img
-                  :src="`/api/image?url=${encodeURIComponent(row.badge)}`"
-                  width="20"
-                  height="20"
-                  :alt="row.team"
-                  class="table__badge"
-                />
-                <span class="table__name">{{ getTeamName(row.team) }}</span>
-              </td>
-              <td>{{ row.played }}</td>
-              <td>{{ row.won }}</td>
-              <td>{{ row.drawn }}</td>
-              <td>{{ row.lost }}</td>
-              <td class="table__goals">{{ row.goalsFor }}:{{ row.goalsAgainst }}</td>
-              <td :class="row.goalDiff > 0 ? 'table__diff--pos' : row.goalDiff < 0 ? 'table__diff--neg' : ''">
-                {{ row.goalDiff > 0 ? '+' : '' }}{{ row.goalDiff }}
-              </td>
-              <td class="table__points">{{ row.points }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        Плей-офф
+      </button>
+      <button
+        class="tab"
+        :class="{ 'tab--active': activeTab === 'groups' }"
+        @click="activeTab = 'groups'"
+      >
+        Группы
+      </button>
     </div>
-  </template>
+
+    <template v-if="activeTab === 'playoff'">
+      <p
+        v-if="!rounds.length"
+        class="empty"
+      >
+        Плей-офф ещё не начался
+      </p>
+      <TournamentBracket
+        v-else
+        :rounds="rounds"
+      />
+    </template>
+
+    <template v-else>
+      <div class="groups">
+        <div
+          v-for="(standings, letter) in groups"
+          :key="letter"
+          class="group"
+        >
+          <h2 class="group__title">
+            Группа {{ letter }}
+          </h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="table__team-col" />
+                <th title="Игры">
+                  И
+                </th>
+                <th title="Победы">
+                  В
+                </th>
+                <th title="Ничьи">
+                  Н
+                </th>
+                <th title="Поражения">
+                  П
+                </th>
+                <th
+                  class="table__goals-col"
+                  title="Голы забитые : пропущенные"
+                >
+                  Г
+                </th>
+                <th title="Разность голов">
+                  РГ
+                </th>
+                <th title="Очки">
+                  О
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(row, index) in standings"
+                :key="row.team"
+                :class="{
+                  'table__row--advance': isAdvancing(row.team, index),
+                  'table__row--maybe': isPossiblyAdvancing(index),
+                }"
+              >
+                <td class="table__team">
+                  <span class="table__position">{{ index + 1 }}</span>
+                  <img
+                    :src="`/api/image?url=${encodeURIComponent(row.badge)}`"
+                    width="20"
+                    height="20"
+                    :alt="row.team"
+                    class="table__badge"
+                  >
+                  <span class="table__name">{{ getTeamName(row.team) }}</span>
+                </td>
+                <td>{{ row.played }}</td>
+                <td>{{ row.won }}</td>
+                <td>{{ row.drawn }}</td>
+                <td>{{ row.lost }}</td>
+                <td class="table__goals">
+                  {{ row.goalsFor }}:{{ row.goalsAgainst }}
+                </td>
+                <td :class="goalDiffClass(row.goalDiff)">
+                  {{ row.goalDiff > 0 ? '+' : '' }}{{ row.goalDiff }}
+                </td>
+                <td class="table__points">
+                  {{ row.points }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </template>
+  </div>
 </template>
 
 <style scoped lang="scss">

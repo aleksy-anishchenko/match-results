@@ -2,12 +2,17 @@
 const isOpen = ref(false)
 const route = useRoute()
 
-watch(route, () => { isOpen.value = false })
+watch(route, () => {
+  isOpen.value = false
+})
 </script>
 
 <template>
   <header class="header container">
-    <NuxtLink to="/" class="logo">
+    <NuxtLink
+      to="/"
+      class="logo"
+    >
       <span class="logo__dot" />
       <span class="logo__text">MatchResults</span>
     </NuxtLink>
@@ -18,11 +23,19 @@ watch(route, () => { isOpen.value = false })
       <li><NuxtLink to="/about">О проекте</NuxtLink></li>
     </ul>
 
-    <button class="burger" :class="{ 'burger--open': isOpen }" @click="isOpen = !isOpen" aria-label="Меню">
+    <button
+      class="burger"
+      :class="{ 'burger--open': isOpen }"
+      aria-label="Меню"
+      @click="isOpen = !isOpen"
+    >
       <span /><span /><span />
     </button>
 
-    <div v-if="isOpen" class="mobile-nav">
+    <div
+      v-if="isOpen"
+      class="mobile-nav"
+    >
       <ul>
         <li><NuxtLink to="/">Результаты матчей</NuxtLink></li>
         <li><NuxtLink to="/standings">Турнирная таблица</NuxtLink></li>

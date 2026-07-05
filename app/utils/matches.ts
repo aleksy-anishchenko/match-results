@@ -1,8 +1,8 @@
-import type {Match} from '~/types'
+import type { Match } from '~/types'
 
 export function groupMatchesByDate(matches: Match[]): Record<string, Match[]> {
   return matches.reduce((acc, match) => {
-    const date = new Date(match.strTimestamp + 'Z').toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
+    const date = new Date(match.timestamp + 'Z').toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
     if (!acc[date]) acc[date] = []
     acc[date]!.push(match)
     return acc

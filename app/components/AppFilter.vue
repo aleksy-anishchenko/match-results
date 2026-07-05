@@ -2,7 +2,7 @@
 type Mode = 'yesterday' | 'today' | 'tomorrow' | 'custom'
 
 const emit = defineEmits<{
-  change: [{ from: string; to: string }]
+  change: [{ from: string, to: string }]
 }>()
 
 const activeMode = ref<Mode>('today')
@@ -22,8 +22,8 @@ function getMoscowDateStr(offset: number): string {
 
 // Moscow today as a local Date object for the DatePicker defaultDate
 const moscowTodayDate = computed(() => {
-  const [y, m, d] = getMoscowDateStr(0).split('-').map(Number)
-  return new Date(y, m - 1, d)
+  const [year, month, day] = getMoscowDateStr(0).split('-').map(Number) as [number, number, number]
+  return new Date(year, month - 1, day)
 })
 
 const displayDate = ref(formatReadableDate(getMoscowDateStr(0)))
@@ -42,10 +42,10 @@ function toggleCalendar(event: Event) {
 
 watch(selectedDate, (date) => {
   if (!date) return
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  const dateStr = `${y}-${m}-${d}`
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const dateStr = `${year}-${month}-${day}`
   displayDate.value = formatReadableDate(dateStr)
   activeMode.value = 'custom'
   popover.value.hide()
@@ -55,36 +55,46 @@ watch(selectedDate, (date) => {
 
 <template>
   <div class="filter-wrap">
-    <div class="filter" role="group" aria-label="Выбор дня">
+    <div
+      class="filter"
+      role="group"
+      aria-label="Выбор дня"
+    >
       <Button
-          class="filter__button"
-          label="Сегодня"
-          :severity="activeMode === 'today' ? 'contrast' : 'secondary'"
-          @click="selectDay('today')"
+        class="filter__button"
+        label="Сегодня"
+        :severity="activeMode === 'today' ? 'contrast' : 'secondary'"
+        @click="selectDay('today')"
       />
       <Button
-          class="filter__button"
-          label="Завтра"
-          :severity="activeMode === 'tomorrow' ? 'contrast' : 'secondary'"
-          @click="selectDay('tomorrow')"
+        class="filter__button"
+        label="Завтра"
+        :severity="activeMode === 'tomorrow' ? 'contrast' : 'secondary'"
+        @click="selectDay('tomorrow')"
       />
       <Button
-          class="filter__button"
-          label="Вчера"
-          :severity="activeMode === 'yesterday' ? 'contrast' : 'secondary'"
-          @click="selectDay('yesterday')"
+        class="filter__button"
+        label="Вчера"
+        :severity="activeMode === 'yesterday' ? 'contrast' : 'secondary'"
+        @click="selectDay('yesterday')"
       />
       <Button
-          icon="pi pi-calendar"
-          :severity="activeMode === 'custom' ? 'contrast' : 'secondary'"
-          aria-label="Выбрать дату"
-          @click="toggleCalendar($event)"
+        icon="pi pi-calendar"
+        :severity="activeMode === 'custom' ? 'contrast' : 'secondary'"
+        aria-label="Выбрать дату"
+        @click="toggleCalendar($event)"
       />
       <Popover ref="popover">
-        <DatePicker v-model="selectedDate" inline :default-date="moscowTodayDate" />
+        <DatePicker
+          v-model="selectedDate"
+          inline
+          :default-date="moscowTodayDate"
+        />
       </Popover>
     </div>
-    <div class="filter__date">{{ displayDate }}</div>
+    <div class="filter__date">
+      {{ displayDate }}
+    </div>
   </div>
 </template>
 

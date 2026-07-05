@@ -1,4 +1,4 @@
-import type {GroupStanding} from '~/types'
+import type { GroupStanding } from '~/types'
 
 type ApiMatch = {
   strHomeTeam: string
@@ -22,7 +22,7 @@ function inferGroups(matches: ApiMatch[]): string[][] {
   const playedWith: Record<string, Set<string>> = {}
 
   for (const match of matches) {
-    const {strHomeTeam: home, strAwayTeam: away} = match
+    const { strHomeTeam: home, strAwayTeam: away } = match
     if (!playedWith[home]) playedWith[home] = new Set()
     if (!playedWith[away]) playedWith[away] = new Set()
     playedWith[home]!.add(away)
@@ -36,7 +36,7 @@ function inferGroups(matches: ApiMatch[]): string[][] {
     if (visited.has(team)) continue
     const group = [team, ...(playedWith[team] ?? [])].sort()
     groups.push(group)
-    group.forEach(t => visited.add(t))
+    group.forEach(groupMember => visited.add(groupMember))
   }
 
   return groups.sort((a, b) => (a[0] ?? '').localeCompare(b[0] ?? ''))
@@ -63,7 +63,7 @@ function calculateStandings(
       strHomeTeam: home,
       strAwayTeam: away,
       intHomeScore,
-      intAwayScore
+      intAwayScore,
     } = match
     if (!stats[home] || !stats[away]) continue
 
@@ -79,23 +79,25 @@ function calculateStandings(
     stats[away].goalsAgainst += homeGoals
 
     if (homeGoals > awayGoals) {
-      stats[home].won++;
+      stats[home].won++
       stats[home].points += 3
       stats[away].lost++
-    } else if (homeGoals === awayGoals) {
-      stats[home].drawn++;
+    }
+    else if (homeGoals === awayGoals) {
+      stats[home].drawn++
       stats[home].points++
-      stats[away].drawn++;
+      stats[away].drawn++
       stats[away].points++
-    } else {
-      stats[away].won++;
+    }
+    else {
+      stats[away].won++
       stats[away].points += 3
       stats[home].lost++
     }
   }
 
   return Object.values(stats)
-    .map(s => ({...s, goalDiff: s.goalsFor - s.goalsAgainst}))
+    .map(standing => ({ ...standing, goalDiff: standing.goalsFor - standing.goalsAgainst }))
     .sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points
       if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff
@@ -105,20 +107,20 @@ function calculateStandings(
 
 export default cachedEventHandler(async () => {
   const config = useRuntimeConfig()
-  const headers = {'X-API-KEY': config.theSportsDbApiKey}
+  const headers = { 'X-API-KEY': config.theSportsDbApiKey }
   const apiBase = 'https://www.thesportsdb.com/api/v2/json'
 
   const nextData = await $fetch<ScheduleResponse>(
-    `${apiBase}/schedule/next/league/4429`,
-    {headers},
+    `${apiBase}/schedule/next/league/${WORLD_CUP_LEAGUE_ID}`,
+    { headers },
   )
 
   const season = nextData.schedule[0]?.strSeason
-  if (!season) return {groups: {}}
+  if (!season) return { groups: {} }
 
   const data = await $fetch<ScheduleResponse>(
-    `${apiBase}/schedule/league/4429/${season}`,
-    {headers},
+    `${apiBase}/schedule/league/${WORLD_CUP_LEAGUE_ID}/${season}`,
+    { headers },
   )
 
   const groupMatches = data.schedule.filter(m => GROUP_ROUNDS.includes(m.intRound))
@@ -134,12 +136,12 @@ export default cachedEventHandler(async () => {
 
   const result: Record<string, GroupStanding[]> = {}
   groups.forEach((groupTeams, index) => {
-    const letter = String.fromCharCode(65 + index)
+    const letter = String.fromCharCode('A'.charCodeAt(0) + index)
     result[letter] = calculateStandings(groupTeams, badgeMap, finishedMatches)
   })
 
-  return {groups: result}
+  return { groups: result }
 }, {
   maxAge: 60,
-  getKey: () => 'standings-4429',
+  getKey: () => `standings-${WORLD_CUP_LEAGUE_ID}`,
 })

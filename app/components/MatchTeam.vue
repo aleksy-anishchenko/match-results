@@ -6,7 +6,7 @@ const props = defineProps<{
 }>()
 
 const badgeUrl = computed(() =>
-  props.badge ? `/api/image?url=${encodeURIComponent(props.badge)}` : ''
+  props.badge ? `/api/image?url=${encodeURIComponent(props.badge)}` : '',
 )
 
 const localName = computed(() => getTeamName(props.name))
@@ -15,12 +15,14 @@ const localName = computed(() => getTeamName(props.name))
 <template>
   <div :class="['team', `team--${side}`]">
     <img
-        :src="badgeUrl"
-        width="30"
-        height="30"
-        :alt="name"
-    />
-    <div class="team__name">{{ localName }}</div>
+      :src="badgeUrl"
+      width="30"
+      height="30"
+      :alt="name"
+    >
+    <div class="team__name">
+      {{ localName }}
+    </div>
   </div>
 </template>
 
@@ -59,7 +61,6 @@ const localName = computed(() => getTeamName(props.name))
   min-width: 0;
   font-size: 13px;
 }
-
 
 @media (min-width: $breakpoint-desktop) {
   .team img { width: 30px; height: 30px; }
