@@ -25,8 +25,6 @@ type V1Response = {
   }> | null
 }
 
-const GROUP_ROUNDS = new Set(['1', '2', '3'])
-
 // FIFA 2026 official bracket display order for Round of 32 (intRound = '32')
 // Maps from timestamp-sorted index to bracket seeding position so that
 // sequential pairing produces correct Round of 16 matchups.
@@ -123,14 +121,21 @@ function buildProjectedRounds(seed: BracketRound): BracketRound[] {
   return result
 }
 
-export default cachedEventHandler(async () => {
+export default cachedEventHandler(async (event) => {
   const config = useRuntimeConfig()
+  const query = getQuery(event)
+  const leagueId = String(query.leagueId ?? DEFAULT_COMPETITION_ID)
+  const competition = getCompetition(leagueId)
+  const groupRounds = new Set(competition?.groupRounds ?? [])
   const headers = { 'X-API-KEY': config.theSportsDbApiKey }
   const apiBase = 'https://www.thesportsdb.com/api/v2/json'
   const v1Base = 'https://www.thesportsdb.com/api/v1/json'
 
+  // Плей-офф есть только у турниров с групповым этапом
+  if (!groupRounds.size) return { rounds: [] }
+
   const nextData = await $fetch<ScheduleResponse>(
-    `${apiBase}/schedule/next/league/${WORLD_CUP_LEAGUE_ID}`,
+    `${apiBase}/schedule/next/league/${leagueId}`,
     { headers },
   )
 
@@ -138,11 +143,11 @@ export default cachedEventHandler(async () => {
   if (!season) return { rounds: [] }
 
   const data = await $fetch<ScheduleResponse>(
-    `${apiBase}/schedule/league/${WORLD_CUP_LEAGUE_ID}/${season}`,
+    `${apiBase}/schedule/league/${leagueId}/${season}`,
     { headers },
   )
 
-  const playoffMatches = data.schedule.filter(match => !GROUP_ROUNDS.has(match.intRound))
+  const playoffMatches = data.schedule.filter(match => !groupRounds.has(match.intRound))
   if (!playoffMatches.length) return { rounds: [] }
 
   // Fetch penalty scores for AP matches from v1 API
@@ -241,5 +246,5 @@ export default cachedEventHandler(async () => {
   return { rounds }
 }, {
   maxAge: 60,
-  getKey: () => `bracket-${WORLD_CUP_LEAGUE_ID}`,
+  getKey: event => `bracket-${getQuery(event).leagueId ?? DEFAULT_COMPETITION_ID}`,
 })

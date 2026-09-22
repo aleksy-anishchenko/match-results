@@ -1,3 +1,19 @@
+export type CompetitionType = 'league' | 'tournament'
+
+export type Competition = {
+  id: string
+  name: string
+  country: string
+  type: CompetitionType
+  category: string
+  /** Для турниров: номера раундов группового этапа (всё остальное — плей-офф) */
+  groupRounds?: string[]
+  /** Логотип преимущественно белый — показывать на тёмной подложке */
+  whiteBadge?: boolean
+}
+
+export type CompetitionWithBadge = Competition & { badge: string | null }
+
 export type Match = {
   idEvent: string
   homeTeam: string

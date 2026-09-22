@@ -6,7 +6,7 @@ const emit = defineEmits<{
 }>()
 
 const activeMode = ref<Mode>('today')
-const selectedDate = ref<Date | null>(null)
+const selectedRange = ref<Date[] | null>(null)
 const popover = ref()
 
 const offsets: Record<Exclude<Mode, 'custom'>, number> = {
@@ -20,19 +20,23 @@ function getMoscowDateStr(offset: number): string {
   return date.toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
 }
 
+function toDateStr(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // Moscow today as a local Date object for the DatePicker defaultDate
 const moscowTodayDate = computed(() => {
   const [year, month, day] = getMoscowDateStr(0).split('-').map(Number) as [number, number, number]
   return new Date(year, month - 1, day)
 })
 
-const displayDate = ref(formatReadableDate(getMoscowDateStr(0)))
-
 function selectDay(mode: Exclude<Mode, 'custom'>) {
   activeMode.value = mode
-  selectedDate.value = null
+  selectedRange.value = null
   const dateStr = getMoscowDateStr(offsets[mode])
-  displayDate.value = formatReadableDate(dateStr)
   emit('change', { from: dateStr, to: dateStr })
 }
 
@@ -40,16 +44,14 @@ function toggleCalendar(event: Event) {
   popover.value.toggle(event)
 }
 
-watch(selectedDate, (date) => {
-  if (!date) return
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const dateStr = `${year}-${month}-${day}`
-  displayDate.value = formatReadableDate(dateStr)
+watch(selectedRange, (range) => {
+  if (!range || range.length < 2) return
+  const [from, to] = range
+  if (!from || !to) return
+  const [start, end] = from.getTime() <= to.getTime() ? [from, to] : [to, from]
   activeMode.value = 'custom'
   popover.value.hide()
-  emit('change', { from: dateStr, to: dateStr })
+  emit('change', { from: toDateStr(start), to: toDateStr(end) })
 })
 </script>
 
@@ -81,19 +83,17 @@ watch(selectedDate, (date) => {
       <Button
         icon="pi pi-calendar"
         :severity="activeMode === 'custom' ? 'contrast' : 'secondary'"
-        aria-label="Выбрать дату"
+        aria-label="Выбрать диапазон дат"
         @click="toggleCalendar($event)"
       />
       <Popover ref="popover">
         <DatePicker
-          v-model="selectedDate"
+          v-model="selectedRange"
           inline
+          selection-mode="range"
           :default-date="moscowTodayDate"
         />
       </Popover>
-    </div>
-    <div class="filter__date">
-      {{ displayDate }}
     </div>
   </div>
 </template>
@@ -107,17 +107,10 @@ watch(selectedDate, (date) => {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 8px;
 }
 
 .filter__button {
   min-width: 90px;
-}
-
-.filter__date {
-  font-size: 22px;
-  font-weight: normal;
-  color: inherit;
 }
 
 @media (min-width: $breakpoint-desktop) {

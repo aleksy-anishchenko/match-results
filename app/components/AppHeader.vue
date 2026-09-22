@@ -1,10 +1,42 @@
 <script setup lang="ts">
+import type { CompetitionWithBadge } from '~/types'
+
+const { selectedId } = useCompetition()
+
 const isOpen = ref(false)
 const route = useRoute()
 
 watch(route, () => {
   isOpen.value = false
 })
+
+const { data: competitionsData } = await useFetch<{ competitions: CompetitionWithBadge[] }>('/api/competitions')
+
+const badgeById = computed(() => {
+  const map: Record<string, string> = {}
+  for (const competition of competitionsData.value?.competitions ?? []) {
+    if (competition.badge) map[competition.id] = competition.badge
+  }
+  return map
+})
+
+const competitionGroups = COMPETITION_CATEGORIES.map(category => ({
+  label: category,
+  items: COMPETITIONS.filter(competition => competition.category === category),
+}))
+
+function competitionName(id: string): string {
+  return getCompetition(id)?.name ?? ''
+}
+
+function isWhiteBadge(id: string): boolean {
+  return getCompetition(id)?.whiteBadge ?? false
+}
+
+function badgeUrl(id: string): string {
+  const badge = badgeById.value[id]
+  return badge ? `/api/image?url=${encodeURIComponent(badge)}` : ''
+}
 </script>
 
 <template>
@@ -22,6 +54,47 @@ watch(route, () => {
       <li><NuxtLink to="/standings">Таблица</NuxtLink></li>
       <li><NuxtLink to="/about">О проекте</NuxtLink></li>
     </ul>
+
+    <div class="header__select">
+      <Select
+        v-model="selectedId"
+        :options="competitionGroups"
+        option-label="name"
+        option-value="id"
+        option-group-label="label"
+        option-group-children="items"
+        aria-label="Выбор турнира"
+        class="comp-select"
+      >
+        <template #value="slotProps">
+          <div
+            v-if="slotProps.value"
+            class="comp-value"
+          >
+            <img
+              v-if="badgeUrl(slotProps.value)"
+              :src="badgeUrl(slotProps.value)"
+              :class="['comp-ico', { 'comp-ico--bg': isWhiteBadge(slotProps.value) }]"
+              alt=""
+            >
+            <span class="comp-name">{{ competitionName(slotProps.value) }}</span>
+          </div>
+          <span v-else>{{ slotProps.placeholder }}</span>
+        </template>
+        <template #option="slotProps">
+          <div class="comp-value">
+            <img
+              v-if="badgeUrl(slotProps.option.id)"
+              :src="badgeUrl(slotProps.option.id)"
+              :class="['comp-ico', { 'comp-ico--bg': isWhiteBadge(slotProps.option.id) }]"
+              alt=""
+            >
+            <span class="comp-name">{{ slotProps.option.name }}</span>
+            <span class="comp-country">{{ slotProps.option.country }}</span>
+          </div>
+        </template>
+      </Select>
+    </div>
 
     <button
       class="burger"
@@ -51,6 +124,7 @@ watch(route, () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding-top: 20px;
   padding-bottom: 20px;
   margin-bottom: 16px;
@@ -61,6 +135,7 @@ watch(route, () => {
   align-items: center;
   gap: 8px;
   color: inherit;
+  flex-shrink: 0;
 }
 
 .logo__dot {
@@ -87,6 +162,50 @@ watch(route, () => {
   white-space: nowrap;
 }
 
+.header__select {
+  margin-left: auto;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.comp-select {
+  width: 100%;
+}
+
+.comp-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.comp-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comp-country {
+  flex-shrink: 0;
+  color: #999;
+  font-size: 12px;
+}
+
+.comp-ico {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.comp-ico--bg {
+  background: #1f2937;
+  padding: 2px;
+  border-radius: 4px;
+}
+
 .burger {
   display: flex;
   flex-direction: column;
@@ -98,7 +217,7 @@ watch(route, () => {
   border: none;
   cursor: pointer;
   padding: 4px;
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .burger span {
@@ -146,5 +265,14 @@ watch(route, () => {
 @media (min-width: $breakpoint-nav) {
   .nav { display: flex; }
   .burger { display: none; }
+  .header__select {
+    width: 195px;
+  }
+}
+
+@media (min-width: $breakpoint-desktop) {
+  .header__select {
+    width: 235px;
+  }
 }
 </style>

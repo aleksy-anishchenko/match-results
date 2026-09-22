@@ -3,17 +3,30 @@ import type { StandingsResponse, BracketResponse } from '~/types'
 
 useHead({ title: 'Турнирная таблица' })
 
+const { competition } = useCompetition()
+
+const isTournament = computed(() => competition.value.type === 'tournament')
 const activeTab = ref<'playoff' | 'groups'>('playoff')
 
-const [{ data: standingsData }, { data: bracketData }] = await Promise.all([
-  useFetch<StandingsResponse>('/api/standings'),
-  useFetch<BracketResponse>('/api/bracket'),
-])
+const leagueQuery = computed(() => ({ leagueId: competition.value.id }))
+
+const { data: standingsData } = await useFetch<StandingsResponse>('/api/standings', {
+  query: leagueQuery,
+})
+
+const { data: bracketData } = await useFetch<BracketResponse>('/api/bracket', {
+  query: leagueQuery,
+})
 
 const groups = computed(() => standingsData.value?.groups ?? {})
 const rounds = computed(() => bracketData.value?.rounds ?? [])
 
+const isGroupStage = computed(() => isTournament.value && Object.keys(groups.value).length > 1)
+
+const secondTabLabel = computed(() => isGroupStage.value ? 'Группы' : 'Таблица')
+
 const advancedTeams = computed(() => {
+  if (!isGroupStage.value) return null
   const roundOf32 = bracketData.value?.rounds.find(round => !round.projected)
   if (!roundOf32) return null
   const teams = new Set<string>()
@@ -45,7 +58,10 @@ function goalDiffClass(goalDiff: number): string {
       Турнирная таблица
     </h1>
 
-    <div class="tabs">
+    <div
+      v-if="isTournament"
+      class="tabs"
+    >
       <button
         class="tab"
         :class="{ 'tab--active': activeTab === 'playoff' }"
@@ -58,11 +74,11 @@ function goalDiffClass(goalDiff: number): string {
         :class="{ 'tab--active': activeTab === 'groups' }"
         @click="activeTab = 'groups'"
       >
-        Группы
+        {{ secondTabLabel }}
       </button>
     </div>
 
-    <template v-if="activeTab === 'playoff'">
+    <template v-if="isTournament && activeTab === 'playoff'">
       <p
         v-if="!rounds.length"
         class="empty"
@@ -78,12 +94,15 @@ function goalDiffClass(goalDiff: number): string {
     <template v-else>
       <div class="groups">
         <div
-          v-for="(standings, letter) in groups"
-          :key="letter"
+          v-for="(standings, groupName) in groups"
+          :key="groupName"
           class="group"
         >
-          <h2 class="group__title">
-            Группа {{ letter }}
+          <h2
+            v-if="isTournament"
+            class="group__title"
+          >
+            {{ groupName }}
           </h2>
           <table class="table">
             <thead>
@@ -120,8 +139,8 @@ function goalDiffClass(goalDiff: number): string {
                 v-for="(row, index) in standings"
                 :key="row.team"
                 :class="{
-                  'table__row--advance': isAdvancing(row.team, index),
-                  'table__row--maybe': isPossiblyAdvancing(index),
+                  'table__row--advance': isGroupStage && isAdvancing(row.team, index),
+                  'table__row--maybe': isGroupStage && isPossiblyAdvancing(index),
                 }"
               >
                 <td class="table__team">

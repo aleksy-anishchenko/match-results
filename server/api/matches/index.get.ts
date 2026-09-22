@@ -32,7 +32,7 @@ const getMoscowDate = (timestamp: string) =>
 export default cachedEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const query = getQuery(event)
-  const leagueId = String(query.leagueId ?? WORLD_CUP_LEAGUE_ID)
+  const leagueId = String(query.leagueId ?? DEFAULT_COMPETITION_ID)
 
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Moscow' })
   const dateFrom = String(query.dateFrom ?? today)
