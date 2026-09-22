@@ -8,6 +8,11 @@ export type Competition = {
   category: string
   /** Для турниров: номера раундов группового этапа (всё остальное — плей-офф) */
   groupRounds?: string[]
+  /**
+   * Турнир с «общим этапом» (Лига чемпионов / Лига Европы): одна общая таблица
+   * вместо групп. Раунды общего этапа определяются динамически по расписанию.
+   */
+  leaguePhase?: boolean
   /** Логотип преимущественно белый — показывать на тёмной подложке */
   whiteBadge?: boolean
 }
@@ -34,6 +39,28 @@ export type Match = {
 
 export type MatchesResponse = {
   matches: Match[]
+}
+
+export type MatchDetails = {
+  idEvent: string
+  homeTeam: string
+  awayTeam: string
+  homeBadge: string
+  awayBadge: string
+  homeScore: string | null
+  awayScore: string | null
+  homePenScore: number | null
+  awayPenScore: number | null
+  status: string
+  timestamp: string
+  date: string
+  time: string
+  league: string
+  season: string
+  round: string | null
+  venue: string | null
+  city: string | null
+  country: string | null
 }
 
 export type GroupStanding = {

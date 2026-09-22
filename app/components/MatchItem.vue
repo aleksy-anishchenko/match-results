@@ -6,32 +6,11 @@ const props = defineProps<{ match: Match }>()
 const liveStatuses = new Set(['1H', 'HT', '2H', 'ET', 'PEN'])
 const isLive = computed(() => liveStatuses.has(props.match.status))
 const isPast = computed(() => FINISHED_MATCH_STATUSES.has(props.match.status))
-
-const statusMap: Record<string, string> = {
-  'NS': 'Не начался',
-  '1H': '1-й тайм',
-  'HT': 'Перерыв',
-  '2H': '2-й тайм',
-  'ET': 'Доп. время',
-  'PEN': 'Пенальти',
-  'FT': 'Завершён',
-  'AET': 'Завершён (ДВ)',
-  'AP': 'Завершён (пен.)',
-}
-
-const formatStatus = (status: string) => statusMap[status] ?? status
-
-const formatMoscowTime = (timestamp: string) =>
-  new Date(timestamp + 'Z').toLocaleTimeString('ru-RU', {
-    timeZone: 'Europe/Moscow',
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 </script>
 
 <template>
-  <div
+  <NuxtLink
+    :to="`/match/${match.idEvent}`"
     class="match"
     :class="{ 'match--live': isLive, 'match--past': isPast }"
   >
@@ -39,7 +18,7 @@ const formatMoscowTime = (timestamp: string) =>
       <template v-if="isLive">
         <div class="match__live">
           <span v-if="match.progress != null">{{ match.progress }}'</span>
-          <span v-else>{{ formatStatus(match.status) }}</span>
+          <span v-else>{{ formatMatchStatus(match.status) }}</span>
         </div>
       </template>
       <template v-else>
@@ -47,7 +26,7 @@ const formatMoscowTime = (timestamp: string) =>
           {{ formatMoscowTime(match.timestamp) }} <span class="match__tz">МСК</span>
         </div>
         <div class="match__status">
-          {{ formatStatus(match.status) }}
+          {{ formatMatchStatus(match.status) }}
         </div>
       </template>
     </div>
@@ -67,7 +46,7 @@ const formatMoscowTime = (timestamp: string) =>
       :badge="match.awayBadge"
       side="right"
     />
-  </div>
+  </NuxtLink>
 </template>
 
 <style scoped lang="scss">
@@ -76,6 +55,12 @@ const formatMoscowTime = (timestamp: string) =>
   align-items: center;
   padding: 12px 0;
   border-bottom: 1px solid #ddd;
+  color: inherit;
+  text-decoration: none;
+}
+
+.match:hover {
+  background-color: #f7f7f7;
 }
 
 .match--live {

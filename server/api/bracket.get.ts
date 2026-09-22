@@ -131,8 +131,8 @@ export default cachedEventHandler(async (event) => {
   const apiBase = 'https://www.thesportsdb.com/api/v2/json'
   const v1Base = 'https://www.thesportsdb.com/api/v1/json'
 
-  // Плей-офф есть только у турниров с групповым этапом
-  if (!groupRounds.size) return { rounds: [] }
+  // Плей-офф есть только у турниров с групповым этапом или общим этапом
+  if (!groupRounds.size && !competition?.leaguePhase) return { rounds: [] }
 
   const nextData = await $fetch<ScheduleResponse>(
     `${apiBase}/schedule/next/league/${leagueId}`,
@@ -147,7 +147,20 @@ export default cachedEventHandler(async (event) => {
     { headers },
   )
 
-  const playoffMatches = data.schedule.filter(match => !groupRounds.has(match.intRound))
+  // Для турниров с общим этапом (ЛЧ/ЛЕ) в расписании лежат ещё и матчи
+  // квалификации — оставляем только раунды плей-офф (степени двойки: 16/8/4/2/1)
+  const playoffMatches = competition?.leaguePhase
+    ? (() => {
+        const roundCounts = getRoundCounts(data.schedule)
+        const knockoutRounds = new Set(
+          [...roundCounts.entries()]
+            .filter(([, count]) => isPowerOfTwo(count))
+            .map(([round]) => round),
+        )
+        return data.schedule.filter(match => knockoutRounds.has(match.intRound))
+      })()
+    : data.schedule.filter(match => !groupRounds.has(match.intRound))
+
   if (!playoffMatches.length) return { rounds: [] }
 
   // Fetch penalty scores for AP matches from v1 API

@@ -147,8 +147,24 @@ export default cachedEventHandler(async (event) => {
     { headers },
   )
 
-  const groupRounds = new Set(competition?.groupRounds ?? [])
-  const groupMatches = data.schedule.filter(match => groupRounds.has(match.intRound))
+  // Общий этап (ЛЧ/ЛЕ): определяем раунды таблицы динамически, отсекая квалификацию
+  const leaguePhaseRoundCount = competition?.leaguePhase
+    ? getLeaguePhaseRoundCount(getRoundCounts(data.schedule))
+    : null
+
+  let groupMatches: ApiMatch[]
+  if (leaguePhaseRoundCount != null) {
+    const roundCounts = getRoundCounts(data.schedule)
+    const leaguePhaseRounds = new Set(
+      [...roundCounts.entries()].filter(([, count]) => count === leaguePhaseRoundCount).map(([round]) => round),
+    )
+    groupMatches = data.schedule.filter(match => leaguePhaseRounds.has(match.intRound))
+  }
+  else {
+    const groupRounds = new Set(competition?.groupRounds ?? [])
+    groupMatches = data.schedule.filter(match => groupRounds.has(match.intRound))
+  }
+
   if (!groupMatches.length) return { groups: {} }
 
   const badgeMap: Record<string, string> = {}
